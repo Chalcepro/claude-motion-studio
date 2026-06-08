@@ -1,0 +1,10 @@
+node_modules/
+out/
+.env
+.env.*
+public/generated/*.png
+public/generated/*.jpg
+.DS_Store
+.idea/
+.vscode/
+*.log

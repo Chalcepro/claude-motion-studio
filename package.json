@@ -1,0 +1,27 @@
+{
+  "name": "claude-motion-studio",
+  "version": "1.0.0",
+  "description": "Turn Claude Code into a motion-graphic designer — a Remotion studio + Claude skills.",
+  "private": true,
+  "scripts": {
+    "dev": "remotion studio",
+    "render": "remotion render",
+    "still": "remotion still",
+    "gen": "node src/generate/generate.mjs",
+    "sfx": "node src/generate/sfx.mjs"
+  },
+  "dependencies": {
+    "@remotion/google-fonts": "4.0.350",
+    "@remotion/shapes": "4.0.350",
+    "@remotion/transitions": "4.0.350",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "4.0.350",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@remotion/cli": "4.0.350",
+    "@types/react": "19.0.0",
+    "typescript": "5.7.3"
+  }
+}
