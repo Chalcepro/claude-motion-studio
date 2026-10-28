@@ -3,6 +3,9 @@ import { Composition } from "remotion";
 import { KineticIntro } from "./compositions/KineticIntro";
 import { DataReel } from "./compositions/DataReel";
 import { AppShowcase } from "./compositions/AppShowcase";
+import { BrizPictureEdit, BRIZ_PICTURE_FRAMES } from "./compositions/BrizPictureEdit";
+import { NoirPendulum, noirPendulumDefaults, noirPendulumDuration } from "./compositions/NoirPendulum";
+import { BrizPendulum, brizPendulumDefaults, brizPendulumDuration } from "./compositions/BrizPendulum";
 
 /**
  * Register every composition here. Render by id:
@@ -16,5 +19,10 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="KineticIntro" component={KineticIntro} width={1080} height={1920} fps={30} durationInFrames={180} />
     <Composition id="DataReel" component={DataReel} width={1080} height={1920} fps={30} durationInFrames={300} />
     <Composition id="AppShowcase" component={AppShowcase} width={1080} height={1920} fps={30} durationInFrames={240} />
+    <Composition id="BrizPendulum" component={BrizPendulum} width={1080} height={1920} fps={30}
+      durationInFrames={brizPendulumDuration(brizPendulumDefaults.pairs.length)} defaultProps={brizPendulumDefaults} />
+    <Composition id="NoirPendulum" component={NoirPendulum} width={1080} height={1920} fps={30}
+      durationInFrames={noirPendulumDuration(noirPendulumDefaults.pairs.length)} defaultProps={noirPendulumDefaults} />
+    <Composition id="BrizPictureEdit" component={BrizPictureEdit} width={1080} height={1920} fps={30} durationInFrames={BRIZ_PICTURE_FRAMES} />
   </>
 );
