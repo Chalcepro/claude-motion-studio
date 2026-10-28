@@ -18,7 +18,7 @@ const CHAT: { q: string; a: string }[] = [
   { q: "So I can try all\nthis now?", a: "Yeah. Sign up at\npaywithbriz.com 😎" },
 ];
 
-const STEP = 84; // frames per question + answer
+const STEP = 108; // frames per question + answer (3.6 s)
 const TYPING = 22; // Briz "typing…" before each answer
 const Q_AT = (i: number) => 20 + i * STEP;
 const A_AT = (i: number) => Q_AT(i) + 14 + TYPING;
