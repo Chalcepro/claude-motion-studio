@@ -5,6 +5,7 @@ import { DataReel } from "./compositions/DataReel";
 import { AppShowcase } from "./compositions/AppShowcase";
 import { BrizPictureEdit, BRIZ_PICTURE_FRAMES } from "./compositions/BrizPictureEdit";
 import { BrizChat, BRIZ_CHAT_FRAMES } from "./compositions/BrizChat";
+import { BrizWipe, BRIZ_WIPE_FRAMES } from "./compositions/BrizWipe";
 import { BrizRows, BRIZ_ROWS_FRAMES } from "./compositions/BrizRows";
 import { NoirPendulum, noirPendulumDefaults, noirPendulumDuration } from "./compositions/NoirPendulum";
 import { BrizPendulum, brizPendulumDefaults, brizPendulumDuration } from "./compositions/BrizPendulum";
@@ -28,6 +29,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="BrizRowsA" component={BrizRows} width={1080} height={1920} fps={30} durationInFrames={BRIZ_ROWS_FRAMES} defaultProps={{ look: "rows" as const }} />
     <Composition id="BrizRowsC" component={BrizRows} width={1080} height={1920} fps={30} durationInFrames={BRIZ_ROWS_FRAMES} defaultProps={{ look: "bubbles" as const }} />
     <Composition id="BrizChat" component={BrizChat} width={1080} height={1920} fps={30} durationInFrames={BRIZ_CHAT_FRAMES} />
+    <Composition id="BrizWipe" component={BrizWipe} width={1080} height={1920} fps={30} durationInFrames={BRIZ_WIPE_FRAMES} />
     <Composition id="BrizPictureEdit" component={BrizPictureEdit} width={1080} height={1920} fps={30} durationInFrames={BRIZ_PICTURE_FRAMES} />
   </>
 );
