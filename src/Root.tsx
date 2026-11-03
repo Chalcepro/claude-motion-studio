@@ -8,6 +8,7 @@ import { BrizChat, brizChatDefaults, chatFrames } from "./compositions/BrizChat"
 import { BrizWipe, brizWipeDefaults, wipeFrames } from "./compositions/BrizWipe";
 import { chats, wipes, pendulums } from "./compositions/library";
 import { BrizPowerFlat, BRIZ_POWER_FLAT_FRAMES } from "./compositions/BrizPowerFlat";
+import { BrizPowerCrowd, BRIZ_POWER_CROWD_FRAMES } from "./compositions/BrizPowerCrowd";
 import { BrizPowerBurst, BRIZ_POWER_BURST_FRAMES } from "./compositions/BrizPowerBurst";
 import { BrizPower, BRIZ_POWER_FRAMES } from "./compositions/BrizPower";
 import { BrizRows, BRIZ_ROWS_FRAMES } from "./compositions/BrizRows";
@@ -32,6 +33,7 @@ export const RemotionRoot: React.FC = () => (
       durationInFrames={noirPendulumDuration(noirPendulumDefaults.pairs.length)} defaultProps={noirPendulumDefaults} />
     <Composition id="BrizRowsA" component={BrizRows} width={1080} height={1920} fps={30} durationInFrames={BRIZ_ROWS_FRAMES} defaultProps={{ look: "rows" as const }} />
     <Composition id="BrizRowsC" component={BrizRows} width={1080} height={1920} fps={30} durationInFrames={BRIZ_ROWS_FRAMES} defaultProps={{ look: "bubbles" as const }} />
+    <Composition id="BrizPowerCrowd" component={BrizPowerCrowd} width={1080} height={1920} fps={30} durationInFrames={BRIZ_POWER_CROWD_FRAMES} />
     <Composition id="BrizPowerBurst" component={BrizPowerBurst} width={1080} height={1920} fps={30} durationInFrames={BRIZ_POWER_BURST_FRAMES} />
     <Composition id="BrizPowerFlat" component={BrizPowerFlat} width={1080} height={1920} fps={30} durationInFrames={BRIZ_POWER_FLAT_FRAMES} />
     <Composition id="BrizPower" component={BrizPower} width={1080} height={1920} fps={30} durationInFrames={BRIZ_POWER_FRAMES} />
