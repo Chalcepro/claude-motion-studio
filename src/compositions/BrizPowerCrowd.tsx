@@ -9,7 +9,7 @@ import { BRIZ } from "../lib/brands";
 // dusk indigo to hot orange-red, a two-ring lightning emblem spins behind him, the crowd stops and turns
 // round to look, and the slogan sits at the top. Then it all settles back to frame 0.
 const W = 1080, H = 1920;
-const HAND = "#3B4252", INK = BRIZ.ink, RED = BRIZ.accent, CREAM = BRIZ.bg, F = BRIZ.font;
+const HAND = "#3B4252", SEAM = "#1E2530", INK = BRIZ.ink, RED = BRIZ.accent, CREAM = BRIZ.bg, F = BRIZ.font;
 export const SLOGAN_A = "So much power";
 export const SLOGAN_B = "in the chat of your WhatsApp.";
 export const BRIZ_POWER_CROWD_FRAMES = 420; // 14 s
@@ -71,7 +71,7 @@ const Person: React.FC<{ w: Walker; f: number; hot: number }> = ({ w, f, hot }) 
       <clipPath id={id}><rect x={-400} y={0} width={400 + (split - 0.5) * 2 * hw} height={H} /></clipPath>
       <path d={bodyPath(0, top, hw)} fill={shade} />
       <ellipse cx={0} cy={hy} rx={hr * lerp(0.9, 1, turn)} ry={hr} fill={shade} />
-      <polygon points={`${facing * hr * 0.8},${hy - hr * 0.25} ${facing * hr * 1.22},${hy + hr * 0.12} ${facing * hr * 0.8},${hy + hr * 0.3}`} fill={shade} opacity={Math.abs(facing)} />
+      <polygon points={`${facing * hr * 0.9},${hy - hr * 0.08} ${facing * hr * 1.08},${hy + hr * 0.08} ${facing * hr * 0.9},${hy + hr * 0.16}`} fill={shade} opacity={Math.abs(facing)} />
       <g clipPath={`url(#${id})`}>
         <path d={bodyPath(0, top, hw)} fill={lit} />
         <ellipse cx={0} cy={hy} rx={hr * lerp(0.9, 1, turn)} ry={hr} fill={lit} />
@@ -252,6 +252,19 @@ export const BrizPowerCrowd: React.FC = () => {
           {/* hero: flat ink, no gradients */}
           <g transform={`translate(${jig * 0.4} ${heroY}) translate(${HERO_X} ${H}) scale(1 ${squash}) translate(${-HERO_X} ${-H})`}>
             <path d={bodyPath(HERO_X, BODY_TOP, BODY_HW)} fill={INK} />
+            {/* hoodie details, flat: hood rim, sleeve seams, drawstrings, front pocket */}
+            <ellipse cx={HERO_X} cy={BODY_TOP + 30} rx={175} ry={72} fill={SEAM} />
+            <ellipse cx={HERO_X} cy={BODY_TOP + 22} rx={128} ry={44} fill={INK} />
+            <path d={`M${HERO_X - 205} ${BODY_TOP + 120} Q${HERO_X - 228} ${BODY_TOP + 330} ${HERO_X - 222} ${BODY_TOP + 620}`} stroke={SEAM} strokeWidth={10} fill="none" strokeLinecap="round" />
+            <path d={`M${HERO_X + 205} ${BODY_TOP + 120} Q${HERO_X + 228} ${BODY_TOP + 330} ${HERO_X + 222} ${BODY_TOP + 620}`} stroke={SEAM} strokeWidth={10} fill="none" strokeLinecap="round" />
+            {[-42, 42].map((dx) => (
+              <g key={dx}>
+                <path d={`M${HERO_X + dx} ${BODY_TOP + 60} Q${HERO_X + dx * 1.15} ${BODY_TOP + 130} ${HERO_X + dx * 0.9} ${BODY_TOP + 205}`} stroke={HAND} strokeWidth={9} fill="none" strokeLinecap="round" />
+                <circle cx={HERO_X + dx * 0.9} cy={BODY_TOP + 212} r={10} fill={HAND} />
+              </g>
+            ))}
+            <path d={`M${HERO_X - 190} ${BODY_TOP + 640} H${HERO_X + 190} L${HERO_X + 240} ${BODY_TOP + 880} H${HERO_X - 240} Z`} fill={SEAM} />
+            <path d={`M${HERO_X - 176} ${BODY_TOP + 656} H${HERO_X + 176} L${HERO_X + 222} ${BODY_TOP + 880} H${HERO_X - 222} Z`} fill={INK} />
           </g>
           <g transform={`translate(${HERO_X + jig * 0.8} ${HEAD_Y + heroY * 1.3}) rotate(${headTilt})`}>
             <ellipse cx={0} cy={0} rx={HEAD_R * 0.95} ry={HEAD_R} fill={INK} />
@@ -261,8 +274,10 @@ export const BrizPowerCrowd: React.FC = () => {
           <g filter="url(#goo)" fill={HAND}>
             <rect x={phone.x - pw + 10} y={phone.y - ph + 10} width={Math.max(0, pw * 2 - 20)} height={ph * 2 - 20} rx={24} />
             <HandBlobs h={handR} />
-            <HandBlobs h={handL} />
+            {free < 0.5 && <HandBlobs h={handL} />}
           </g>
+          {/* once it lets go, the pointing hand is gooed on its own so it never melts into the phone */}
+          {free >= 0.5 && <g filter="url(#goo)" fill={HAND}><HandBlobs h={handL} /></g>}
           <g transform={`translate(${phone.x} ${phone.y}) scale(${phoneS * flip} ${phoneS})`}>
             <PhoneFace f={f} front={front} />
           </g>
