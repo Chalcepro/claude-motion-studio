@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
 import { BRIZ } from "../lib/brands";
-import { Sticker, onTwos } from "../lib/sticker";
+import { Sticker, onTwos, Pow } from "../lib/sticker";
 import { mulberry32 } from "../lib/primitives";
 
 // Sticker loop "Less stress." (10 s). On a cream board, stress stickers slap down around a phone one by one
@@ -40,7 +40,7 @@ const Bill = () => (
     <div style={{ position: "absolute", bottom: 26, fontSize: 64, fontWeight: 800, color: RED }}>₦₦₦</div>
   </Card>
 );
-const Bang = () => <Card w={190} h={190} bg={RED} r={95}><span style={{ color: CREAM, fontSize: 120, fontWeight: 800, lineHeight: 1 }}>!!</span></Card>;
+const Bang = () => <Card w={190} h={190} bg={INK} r={95}><span style={{ color: CREAM, fontSize: 120, fontWeight: 800, lineHeight: 1 }}>!!</span></Card>;
 const Check = () => (
   <Card w={210} h={210} bg={GREEN} r={105}>
     <svg width={120} height={120}><path d="M20 64 L50 94 L102 30" fill="none" stroke="#fff" strokeWidth={20} strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -64,9 +64,9 @@ export const BrizStickerStress: React.FC = () => {
   const shake = f < BRIZ_IN ? Math.sin(onTwos(f) * 1.7) * Math.min(1, f / 80) * 8 : 0;
 
   return (
-    <AbsoluteFill style={{ background: CREAM, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: "linear-gradient(170deg, #FF8A1E 0%, #F2451A 45%, #8E0F12 100%)", overflow: "hidden" }}>
       <svg width={W} height={H} style={{ position: "absolute" }}>
-        {GRAIN.map((g, i) => <circle key={i} cx={g.x} cy={g.y} r={g.r} fill="#8A5A2B" opacity={g.o} />)}
+        {GRAIN.map((g, i) => <circle key={i} cx={g.x} cy={g.y} r={g.r} fill="#3A0500" opacity={g.o * 1.6} />)}
       </svg>
 
       {S({ x: 540 + shake, y: 1000, at: 4, out: ALL_OUT + 8, dir: [0.2, 1], rot: -3, seed: 1, children: (
@@ -91,12 +91,22 @@ export const BrizStickerStress: React.FC = () => {
       {S({ x: 860, y: 1400, at: STRESS_OUT + 30, out: ALL_OUT + 6, dir: [1, 0.6], rot: 12, seed: 10, children: <Coin /> })}
       {S({ x: 240, y: 700, at: STRESS_OUT + 38, out: ALL_OUT + 2, dir: [-1, -0.5], rot: -14, seed: 11, children: <Smile /> })}
 
+      {/* comic sound effects whenever something lands or leaves */}
+      <Pow f={f} at={4} x={830} y={470} word="THUD!" seed={1} rot={10} />
+      <Pow f={f} at={34} x={640} y={560} word="RING!" seed={2} size={0.8} />
+      <Pow f={f} at={62} x={700} y={1200} word="ARGH!" seed={3} rot={6} size={0.8} color="#FFFFFF" />
+      <Pow f={f} at={BRIZ_IN} x={300} y={830} word="POP!" seed={4} rot={-12} />
+      <Pow f={f} at={STRESS_OUT + 2} x={540} y={520} word="WHOOSH" seed={5} rot={-4} size={0.9} color="#FFFFFF" />
+      <Pow f={f} at={STRESS_OUT + 16} x={620} y={560} word="TING!" seed={6} size={0.75} />
+      <Pow f={f} at={WORD} x={880} y={190} word="BAM!" seed={7} rot={14} size={0.8} />
+      <Pow f={f} at={ALL_OUT} x={540} y={960} word="ZIP!" seed={8} rot={-10} color="#FFFFFF" />
+
       {/* words */}
       {S({ x: 540, y: 330, at: WORD, out: ALL_OUT - 4, dir: [0, -1], rot: -4, seed: 12, children: (
         <div style={{ fontFamily: F, fontWeight: 800, fontSize: 150, color: INK, letterSpacing: -4, whiteSpace: "nowrap" }}>Less <span style={{ color: RED }}>stress.</span></div>
       ) })}
       {S({ x: 540, y: 1740, at: WORD + 24, out: ALL_OUT + 10, dir: [0, 1], rot: 2, seed: 13, children: (
-        <Card w={620} h={120} bg={RED} r={60}><span style={{ fontSize: 54, fontWeight: 700, color: CREAM }}>Pay like a breeze.</span></Card>
+        <Card w={620} h={120} bg={INK} r={60}><span style={{ fontSize: 54, fontWeight: 700, color: CREAM }}>Pay like a breeze.</span></Card>
       ) })}
     </AbsoluteFill>
   );

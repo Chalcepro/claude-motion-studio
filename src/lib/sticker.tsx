@@ -47,3 +47,29 @@ export const Sticker: React.FC<{
     </div>
   );
 };
+
+// Comic sound-effect burst ("POW!", "TING!"): jagged star + word + action lines, slapped in on twos,
+// lives ~12 frames. Meant to fire whenever a sticker lands or flies off.
+const starPts = (n: number, r0: number, r1: number, seed: number) => {
+  const r = mulberry32(seed);
+  return Array.from({ length: n * 2 }, (_, i) => {
+    const a = (i / (n * 2)) * Math.PI * 2, rad = i % 2 ? r0 : r1 * (0.8 + 0.35 * r());
+    return `${Math.cos(a) * rad},${Math.sin(a) * rad}`;
+  }).join(" ");
+};
+export const Pow: React.FC<{ f: number; at: number; x: number; y: number; word: string; color?: string; ink?: string; rot?: number; size?: number; seed?: number; life?: number }> =
+  ({ f, at, x, y, word, color = "#FFC93C", ink = "#0B0F14", rot = -8, size = 1, seed = 3, life = 12 }) => {
+  const t = onTwos(f) - at;
+  if (t < 0 || t > life) return null;
+  const s = (t === 0 ? 0.6 : t === 2 ? 1.2 : 1) * (t > life - 4 ? 0.85 : 1) * size;
+  const lines = Array.from({ length: 8 }, (_, i) => (i / 8) * Math.PI * 2 + seed);
+  return (
+    <div style={{ position: "absolute", left: x, top: y, transform: `translate(-50%,-50%) rotate(${rot + (t % 4 ? 2 : -2)}deg) scale(${s})`, filter: stickerFilter() }}>
+      <svg width={420} height={320} viewBox="-210 -160 420 320" style={{ display: "block", overflow: "visible" }}>
+        {lines.map((a, i) => <line key={i} x1={Math.cos(a) * 170} y1={Math.sin(a) * 130} x2={Math.cos(a) * (210 + t * 4)} y2={Math.sin(a) * (165 + t * 3)} stroke={ink} strokeWidth={10} strokeLinecap="round" />)}
+        <polygon points={starPts(11, 95, 150, seed)} fill={color} stroke={ink} strokeWidth={10} strokeLinejoin="round" transform="scale(1 0.78)" />
+        <text x={0} y={22} textAnchor="middle" fontFamily="Poppins, sans-serif" fontWeight={800} fontSize={word.length > 5 ? 46 : 74} fill={ink} letterSpacing={-1}>{word}</text>
+      </svg>
+    </div>
+  );
+};
