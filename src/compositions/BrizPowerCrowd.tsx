@@ -61,23 +61,28 @@ const Person: React.FC<{ w: Walker; f: number; hot: number }> = ({ w, f, hot }) 
   const bob = -Math.abs(Math.sin(f / 6 + w.phase)) * 9 * w.s * walk + Math.sin(f / 20 + w.phase) * 2;
   const lit = interpolateColors(hot, [0, 1], [CALM.lit, HOT.lit]);
   const shade = interpolateColors(hot, [0, 1], [CALM.shade, HOT.shade]);
-  const hr = HEAD_R * w.s, hw = BODY_HW * w.s * lerp(0.62, 1, turn); // side-on bodies are narrower
-  const hy = w.headY + bob, top = hy + (BODY_TOP - HEAD_Y) * w.s;
-  const facing = w.dir * (1 - turn); // nose wedge shows which way they walk
-  // Superhot-ish facets: the shadow side is the half away from the light (upper left).
-  const split = lerp(w.dir > 0 ? 0.42 : 0.58, 0.46, turn);
+  // Chalce's ProtoJam design: round head (127x135), small gap, pill body 1.39x head width with a fully
+  // round top, hard light/shade split at 57% from the left. Side-on: tiny low nose. Facing us: small chin.
+  const hW = HEAD_R * 2 * w.s, hH = hW * (135 / 127), bw = hW * 1.39;
+  const hy = w.headY + bob, top = hy + hH * 0.6;
+  const facing = w.dir * (1 - turn);
+  const pill = `M${-bw / 2} ${H + 40} V${top + bw / 2} A${bw / 2} ${bw / 2} 0 0 1 ${bw / 2} ${top + bw / 2} V${H + 40} Z`;
+  const splitX = -bw / 2 + bw * 0.57;
+  const nx = facing * hW / 2, nTip = facing * (hW / 2 + hW * 0.16);
   return (
     <g transform={`translate(${x} 0)`}>
-      <clipPath id={id}><rect x={-400} y={0} width={400 + (split - 0.5) * 2 * hw} height={H} /></clipPath>
-      <path d={bodyPath(0, top, hw)} fill={shade} />
-      <ellipse cx={0} cy={hy} rx={hr * lerp(0.9, 1, turn)} ry={hr} fill={shade} />
-      <polygon points={`${facing * hr * 0.9},${hy - hr * 0.08} ${facing * hr * 1.08},${hy + hr * 0.08} ${facing * hr * 0.9},${hy + hr * 0.16}`} fill={shade} opacity={Math.abs(facing)} />
+      <clipPath id={id}><rect x={-600} y={0} width={600 + splitX} height={H} /></clipPath>
+      <path d={pill} fill={shade} />
+      <ellipse cx={0} cy={hy} rx={hW / 2} ry={hH / 2} fill={shade} />
       <g clipPath={`url(#${id})`}>
-        <path d={bodyPath(0, top, hw)} fill={lit} />
-        <ellipse cx={0} cy={hy} rx={hr * lerp(0.9, 1, turn)} ry={hr} fill={lit} />
+        <path d={pill} fill={lit} />
+        <ellipse cx={0} cy={hy} rx={hW / 2} ry={hH / 2} fill={lit} />
       </g>
-      {/* front-on: a faint flat face plane so you can tell they've turned to us */}
-      <ellipse cx={0} cy={hy + hr * 0.12} rx={hr * 0.55} ry={hr * 0.62} fill={lit} opacity={turn * 0.9} />
+      <polygon points={`${nx * 0.96},${hy - hH * 0.05} ${nTip},${hy + hH * 0.06} ${nx * 0.96},${hy + hH * 0.06}`} fill={facing < 0 ? lit : shade} opacity={Math.abs(facing)} />
+      <g opacity={turn}>
+        <ellipse cx={0} cy={hy + hH * 0.17} rx={hW * 0.15} ry={hH * 0.15} fill={shade} />
+        <ellipse cx={hW * 0.1} cy={hy + hH * 0.17} rx={hW * 0.05} ry={hH * 0.12} fill={lit} />
+      </g>
     </g>
   );
 };
@@ -128,14 +133,13 @@ const Alerts: React.FC<{ f: number }> = ({ f }) => {
 // Hands are a rounded rhombus palm + pointer + a slightly bigger thumb, all drawn into one "goo" group
 // (blur + alpha threshold) so they melt into each other and into the phone edge they are near.
 type HandSpec = { at: Pt; rot: number; s: number; point: number };
+const HAND_PTS: [number, number][] = [[94,340],[56,260],[0,176],[0,151],[22,160],[56,189],[94,240],[105,189],[114,120],[122,29],[137,0],[155,29],[155,176],[225,189],[258,260],[213,360],[155,380],[105,360]];
 const HandBlobs: React.FC<{ h: HandSpec }> = ({ h }) => {
-  const ext = lerp(70, 150, h.point); // pointer length
+  const fold = lerp(0.3, 1, h.point); // gripping hands tuck the pointer in
+  const pts = HAND_PTS.map(([x, y]) => `${(x - 160) * 0.62},${(y < 189 && x > 100 && x < 160 ? 189 - (189 - y) * fold : y) * 0.62 - 290 * 0.62}`).join(" ");
   return (
     <g transform={`translate(${h.at.x} ${h.at.y}) rotate(${h.rot}) scale(${h.s})`}>
-      <path d="M0 -70 Q48 -40 62 0 Q48 46 0 70 Q-48 46 -62 0 Q-48 -40 0 -70 Z" />
-      <rect x={-14} y={-40 - ext} width={28} height={ext + 10} rx={14} />
-      <circle cx={0} cy={-40 - ext} r={14} />
-      <rect x={-86} y={-34} width={34} height={70} rx={17} transform="rotate(-28 -69 0)" />
+      <polygon points={pts} strokeLinejoin="round" stroke={HAND} strokeWidth={14} />
     </g>
   );
 };
