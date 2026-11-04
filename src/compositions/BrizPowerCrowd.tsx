@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors, staticFile, useCurrentFrame } from "remotion";
-import { clamp, eSmooth, lerp } from "../lib/primitives";
+import { clamp, eSmooth, lerp, mulberry32 } from "../lib/primitives";
 import { BRIZ } from "../lib/brands";
 
 // Crowd loop v3 (flat colours only, no shading on the hero).
@@ -87,7 +87,37 @@ const Person: React.FC<{ w: Walker; f: number; hot: number }> = ({ w, f, hot }) 
   );
 };
 
-// ---------- the two-ring lightning emblem (spins round its own vertical axis) ----------
+// ---------- Chalce's ProtoJam burst: a ball half below the frame, jagged rays fanning out of it ----------
+// Ray drawn base-down from his vector (206 x 500); pivot = its base. Pale rays behind, red->orange in front.
+const RAY = [[91,500],[116,417],[71,360],[131,280],[0,20],[116,0],[206,280],[131,360],[151,420],[131,480]].map(([x, y]) => `${(x - 111) * 0.9},${(y - 500) * 3.2}`).join(" ");
+const Burst: React.FC = () => (
+  <g>
+    <defs>
+      <linearGradient id="rayHot" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stopColor="#FF9924" /><stop offset="1" stopColor="#FF1F1F" /></linearGradient>
+    </defs>
+    {Array.from({ length: 12 }, (_, i) => <polygon key={`b${i}`} points={RAY} fill="#FFAE6B" transform={`rotate(${i * 30 + 13}) translate(0 -150)`} />)}
+    {Array.from({ length: 12 }, (_, i) => <polygon key={`f${i}`} points={RAY} fill="url(#rayHot)" transform={`rotate(${i * 30}) translate(0 -150)`} />)}
+    <circle r={300} fill="#FF9924" />
+  </g>
+);
+
+// ---------- background texture: faint, blurred four-point stars, light on dark sky, dark on light sky ----------
+const STARS = (() => {
+  const r = mulberry32(11);
+  return Array.from({ length: 70 }, () => ({ x: r() * W, y: r() * H * 0.75, s: 8 + r() * 18, a: r() * 90 }));
+})();
+const star = (s: number) => `M0 ${-s} Q${s * 0.18} ${-s * 0.18} ${s} 0 Q${s * 0.18} ${s * 0.18} 0 ${s} Q${-s * 0.18} ${s * 0.18} ${-s} 0 Q${-s * 0.18} ${-s * 0.18} 0 ${-s} Z`;
+const Stars: React.FC<{ hot: number }> = ({ hot }) => (
+  <g filter="url(#soft)">
+    {STARS.map((t, i) => {
+      // hot sky is light at the top and dark red low down, so the star colour flips with height
+      const light = hot < 0.5 || t.y > H * 0.55;
+      return <path key={i} d={star(t.s)} transform={`translate(${t.x} ${t.y}) rotate(${t.a})`} fill={light ? "#FFFFFF" : "#5A1205"} opacity={light ? 0.16 : 0.14} />;
+    })}
+  </g>
+);
+
+// ---------- the two-ring lightning emblem (unused since v7) (spins round its own vertical axis) ----------
 const BOLT = "M-60 -330 L60 -120 L-30 -90 L90 120 L0 140 L70 330 L-120 60 L-20 40 L-140 -170 L-40 -190 Z";
 const Ring: React.FC<{ spin: number; r: number; op: number; col: string; bolt: string }> = ({ spin, r, op, col, bolt }) => (
   <g transform={`scale(${Math.cos(spin)} 1)`} opacity={op}>
@@ -211,11 +241,11 @@ export const BrizPowerCrowd: React.FC = () => {
   const handR: HandSpec = { at: P(phone.x + pw - 6, phone.y + ph * 0.42), rot: lerp(-20, -10, push), s: lerp(0.9, 1.2, push), point: 0, flip: true }; // mirrored so it reads as a right hand
   // Left hand: on the lower left edge while tapping (the pointer bobs = the tap), then flies out and points at the screen.
   const free = k([PUSH - 4, PUSH + 12], [0, 1], backOut) * (1 - k([BACK + 4, BACK + 26], [0, 1]));
-  const gripL = P(phone.x - pw + 8, phone.y + ph * 0.3 - tap * 10);
+  const gripL = P(phone.x - pw - 14, phone.y + ph * 0.3 - tap * 10);
   const pointAt = P(150 + Math.sin((f - HOLD) / 8) * 6 * push, 1150 + Math.sin((f - HOLD) / 11) * 5);
   const handLAt = P(lerp(gripL.x, pointAt.x, free), lerp(gripL.y, pointAt.y, free));
   const aim = (Math.atan2(phone.y - handLAt.y, phone.x - pw * 0.7 - handLAt.x) * 180) / Math.PI + 90;
-  const handL: HandSpec = { at: handLAt, rot: lerp(20 - tap * 8, aim, free), s: lerp(0.9, 1.25, free), point: free, flip: free < 0.5 };
+  const handL: HandSpec = { at: handLAt, rot: lerp(20 - tap * 8, aim, free), s: lerp(0.9, 1.25, free), point: free, flip: front && free < 0.5 }; // in front of the phone while it shows its back; flipped and behind once it turns
 
   const zoom = k([0, ANT, PUSH, PUSH + 8, HOLD + 30, BACK, END], [1, 1.02, 1.07, 1.13, 1.09, 1.08, 1]);
   const emblem = k([PUSH, PUSH + 18], [0, 1], backOut) * (1 - k([BACK - 4, BACK + 20], [0, 1]));
@@ -234,6 +264,7 @@ export const BrizPowerCrowd: React.FC = () => {
             <pattern id="dots" width={22} height={22} patternUnits="userSpaceOnUse"><circle cx={11} cy={11} r={4} fill={col(CALM.dots, HOT.dots)} /></pattern>
             <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0.3" stopColor="#fff" stopOpacity={0} /><stop offset="1" stopColor="#fff" stopOpacity={1} /></linearGradient>
             <mask id="dotMask"><rect width={W} height={H} fill="url(#fade)" /></mask>
+            <filter id="soft"><feGaussianBlur stdDeviation={3} /></filter>
             <filter id="goo" filterUnits="userSpaceOnUse" x={-200} y={-200} width={W + 400} height={H + 400}>
               <feGaussianBlur stdDeviation={13} />
               <feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 30 -13" />
@@ -242,15 +273,15 @@ export const BrizPowerCrowd: React.FC = () => {
           {/* Spider-Verse-ish background: one gradient + halftone dots growing toward the bottom */}
           <rect width={W} height={H} fill="url(#sky)" />
           <rect width={W} height={H} fill="url(#dots)" mask="url(#dotMask)" opacity={0.22} />
+          <Stars hot={hot} />
 
 
           {WALKERS.filter((w) => w.row === 0).map((w) => <Person key={`${w.row}${w.slot}`} w={w} f={f} hot={hot} />)}
           {WALKERS.filter((w) => w.row === 1).map((w) => <Person key={`${w.row}${w.slot}`} w={w} f={f} hot={hot} />)}
 
           {emblem > 0 && (
-            <g transform={`translate(${HERO_X} 900) scale(${emblem * 0.8})`}>
-              <Ring spin={spin + 0.9} r={470} op={0.35} col="#FFF4E0" bolt="#FFE27A" />
-              <Ring spin={spin} r={400} op={1} col="#FFFFFF" bolt="#FFD21F" />
+            <g transform={`translate(${HERO_X} ${H}) scale(${emblem * (1 + 0.03 * Math.sin(f / 7))}) rotate(${spin * 6})`}>
+              <Burst />
             </g>
           )}
           {/* hero: flat ink, no gradients */}
@@ -278,13 +309,13 @@ export const BrizPowerCrowd: React.FC = () => {
           <g filter="url(#goo)" fill={HAND}>
             <rect x={phone.x - pw + 10} y={phone.y - ph + 10} width={Math.max(0, pw * 2 - 20)} height={ph * 2 - 20} rx={24} />
             <HandBlobs h={handR} />
-            {free < 0.5 && <HandBlobs h={handL} />}
+            {front && free < 0.5 && <HandBlobs h={handL} />}
           </g>
-          {/* once it lets go, the pointing hand is gooed on its own so it never melts into the phone */}
-          {free >= 0.5 && <g filter="url(#goo)" fill={HAND}><HandBlobs h={handL} /></g>}
           <g transform={`translate(${phone.x} ${phone.y}) scale(${phoneS * flip} ${phoneS})`}>
             <PhoneFace f={f} front={front} />
           </g>
+          {/* in front of the phone while it shows its back, and once it lets go, the pointing hand is gooed on its own so it never melts into the phone */}
+          {(free >= 0.5 || !front) && <g filter="url(#goo)" fill={HAND}><HandBlobs h={handL} /></g>}
         </svg>
       </AbsoluteFill>
 
