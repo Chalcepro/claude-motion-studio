@@ -132,13 +132,13 @@ const Alerts: React.FC<{ f: number }> = ({ f }) => {
 // ---------- hands + phone ----------
 // Hands are a rounded rhombus palm + pointer + a slightly bigger thumb, all drawn into one "goo" group
 // (blur + alpha threshold) so they melt into each other and into the phone edge they are near.
-type HandSpec = { at: Pt; rot: number; s: number; point: number };
+type HandSpec = { at: Pt; rot: number; s: number; point: number; flip?: boolean };
 const HAND_PTS: [number, number][] = [[94,340],[56,260],[0,176],[0,151],[22,160],[56,189],[94,240],[105,189],[114,120],[122,29],[137,0],[155,29],[155,176],[225,189],[258,260],[213,360],[155,380],[105,360]];
 const HandBlobs: React.FC<{ h: HandSpec }> = ({ h }) => {
   const fold = lerp(0.3, 1, h.point); // gripping hands tuck the pointer in
   const pts = HAND_PTS.map(([x, y]) => `${(x - 160) * 0.62},${(y < 189 && x > 100 && x < 160 ? 189 - (189 - y) * fold : y) * 0.62 - 290 * 0.62}`).join(" ");
   return (
-    <g transform={`translate(${h.at.x} ${h.at.y}) rotate(${h.rot}) scale(${h.s})`}>
+    <g transform={`translate(${h.at.x} ${h.at.y}) rotate(${h.rot}) scale(${h.flip ? -h.s : h.s} ${h.s})`}>
       <polygon points={pts} strokeLinejoin="round" stroke={HAND} strokeWidth={14} />
     </g>
   );
@@ -208,14 +208,14 @@ export const BrizPowerCrowd: React.FC = () => {
   const pw = (PHW / 2) * phoneS * flip, ph = (PHH / 2) * phoneS;
 
   // Right hand grips the phone's lower right edge throughout.
-  const handR: HandSpec = { at: P(phone.x + pw - 6, phone.y + ph * 0.42), rot: lerp(-20, -10, push), s: lerp(0.9, 1.2, push), point: 0 };
+  const handR: HandSpec = { at: P(phone.x + pw - 6, phone.y + ph * 0.42), rot: lerp(-20, -10, push), s: lerp(0.9, 1.2, push), point: 0, flip: true }; // mirrored so it reads as a right hand
   // Left hand: on the lower left edge while tapping (the pointer bobs = the tap), then flies out and points at the screen.
   const free = k([PUSH - 4, PUSH + 12], [0, 1], backOut) * (1 - k([BACK + 4, BACK + 26], [0, 1]));
   const gripL = P(phone.x - pw + 8, phone.y + ph * 0.3 - tap * 10);
   const pointAt = P(150 + Math.sin((f - HOLD) / 8) * 6 * push, 1150 + Math.sin((f - HOLD) / 11) * 5);
   const handLAt = P(lerp(gripL.x, pointAt.x, free), lerp(gripL.y, pointAt.y, free));
   const aim = (Math.atan2(phone.y - handLAt.y, phone.x - pw * 0.7 - handLAt.x) * 180) / Math.PI + 90;
-  const handL: HandSpec = { at: handLAt, rot: lerp(20 - tap * 8, aim, free), s: lerp(0.9, 1.25, free), point: free };
+  const handL: HandSpec = { at: handLAt, rot: lerp(20 - tap * 8, aim, free), s: lerp(0.9, 1.25, free), point: free, flip: free < 0.5 };
 
   const zoom = k([0, ANT, PUSH, PUSH + 8, HOLD + 30, BACK, END], [1, 1.02, 1.07, 1.13, 1.09, 1.08, 1]);
   const emblem = k([PUSH, PUSH + 18], [0, 1], backOut) * (1 - k([BACK - 4, BACK + 20], [0, 1]));
