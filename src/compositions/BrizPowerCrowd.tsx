@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, Easing, interpolate, interpolateColors, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Audio, Easing, interpolate, interpolateColors, staticFile, useCurrentFrame } from "remotion";
 import { clamp, eSmooth, lerp, mulberry32 } from "../lib/primitives";
 import { BRIZ } from "../lib/brands";
 
@@ -255,6 +255,7 @@ export const BrizPowerCrowd: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ background: col(CALM.mid, HOT.mid) }}>
+      <Audio src={staticFile("audio/power-crowd.wav")} />
       <AbsoluteFill style={{ transform: `scale(${zoom})`, transformOrigin: "540px 1150px" }}>
         <svg width={W} height={H} style={{ position: "absolute" }}>
           <defs>

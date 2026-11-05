@@ -1,8 +1,8 @@
 import React from "react";
-import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Audio, Img, staticFile, useCurrentFrame } from "remotion";
 import { BRIZ } from "../lib/brands";
 import { Sticker, onTwos, boil } from "../lib/sticker";
-import { mulberry32 } from "../lib/primitives";
+import { BgPaperTiles } from "./BrizBackgrounds";
 
 // Paper-cut reel "As easy as that." (12 s, has an outro). On Briz red, rounded cream paper cards drop onto a
 // stack on twos, one action each: Type it. / Send it. / Done. The stack fans out, "Simple and direct." is
@@ -12,36 +12,6 @@ const GREEN = "#1DB45A";
 export const BRIZ_PAPER_EASY_FRAMES = 360;
 
 const CARD_AT = [10, 58, 106], FAN = 160, SIMPLE = 176, SWEEP = 232, EASY = 246, OUTRO = 292;
-
-const GRAIN = (() => { const r = mulberry32(17); return Array.from({ length: 160 }, () => ({ x: r() * W, y: r() * H, r: 2 + r() * 6, o: 0.05 + r() * 0.06 })); })();
-
-// Filler: rounded doodles in a deeper red (squiggles, rings, plus signs, mini chat bubbles, ₦, sparkles).
-// Low contrast and slowly drifting so the empty red reads as "something there" without pulling the eye.
-const DOODLES = (() => {
-  const r = mulberry32(23);
-  return Array.from({ length: 26 }, (_, i) => ({ x: r() * W, y: r() * H, k: i % 6, s: 0.7 + r() * 0.8, rot: r() * 360, drift: (r() - 0.5) * 0.5 }));
-})();
-const Doodles: React.FC<{ f: number }> = ({ f }) => {
-  const c = "#B81E05", st = { fill: "none", stroke: c, strokeWidth: 10, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  const tf = Math.floor(f / 4) * 4;
-  return (
-    <svg width={W} height={H} style={{ position: "absolute" }}>
-      {DOODLES.map((d, i) => {
-        const y = (((d.y - tf * 0.6) % (H + 200)) + H + 200) % (H + 200) - 100;
-        const wob = Math.floor(f / 4) % 2 ? 2 : -2;
-        const shape = [
-          <path d="M-60 0 Q-30 -30 0 0 T60 0" {...st} />,
-          <circle r={30} {...st} />,
-          <path d="M-24 0 H24 M0 -24 V24" {...st} />,
-          <path d="M-46 -26 h92 a18 18 0 0 1 18 18 v20 a18 18 0 0 1 -18 18 h-60 l-22 18 v-18 h-10 a18 18 0 0 1 -18 -18 v-20 a18 18 0 0 1 18 -18 z" {...st} />,
-          <text x={0} y={22} textAnchor="middle" fontFamily="Poppins" fontWeight={800} fontSize={64} fill={c}>₦</text>,
-          <path d="M0 -30 Q4 -4 30 0 Q4 4 0 30 Q-4 4 -30 0 Q-4 -4 0 -30 Z" fill={c} />,
-        ][d.k];
-        return <g key={i} transform={`translate(${d.x + tf * d.drift} ${y}) rotate(${d.rot + wob}) scale(${d.s})`} opacity={0.55}>{shape}</g>;
-      })}
-    </svg>
-  );
-};
 
 const Icon: React.FC<{ i: number }> = ({ i }) => {
   if (i === 0) return ( // a chat bubble being typed
@@ -69,10 +39,8 @@ export const BrizPaperEasy: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ background: RED, overflow: "hidden", fontFamily: F }}>
-      <svg width={W} height={H} style={{ position: "absolute" }}>
-        {GRAIN.map((g, i) => <circle key={i} cx={g.x} cy={g.y} r={g.r} fill="#5A0E00" opacity={g.o} />)}
-      </svg>
-      <Doodles f={f} />
+      <BgPaperTiles />
+      <Audio src={staticFile("audio/paper-easy.wav")} />
 
       {/* the card stack */}
       {f < SWEEP + 20 && WORDS.map((w, i) => {
