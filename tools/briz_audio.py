@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 
 SR, FPS = 44100, 30
+VOLUME = 0.3  # final level of every reel, 1 = full scale
 OUT = Path(__file__).resolve().parent.parent / "public" / "audio"
 rng = np.random.default_rng(7)
 fr = lambda f: int(round(f / FPS * SR))
@@ -178,7 +179,7 @@ def master(music, sfx, name):
         return np.stack([y, np.concatenate([np.zeros(d), y])[:n] * 0.5 + y * 0.5], 1)
 
     def write(st, path):
-        st = np.tanh(st * 1.15); st = st / max(1e-6, np.abs(st).max()) * 0.89
+        st = np.tanh(st * 1.15); st = st / max(1e-6, np.abs(st).max()) * 0.89 * VOLUME
         with wave.open(str(path), "wb") as w:
             w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR)
             w.writeframes((st * 32767).astype("<i2").tobytes())
@@ -188,7 +189,7 @@ def master(music, sfx, name):
 
 
 def sticker_story():
-    TAP, PROC, PEND, FAIL, COMPLAIN, FLIP, TYPE, TYPED, ASK, PIN_TAP, SHEET, DOWN, SENT, THANKS, END = 40, 50, 170, 210, 236, 300, 330, 380, 396, 430, 436, 512, 524, 556, 620
+    TAP, PROC, PEND, FAIL, COMPLAIN, FLIP, TYPE, TYPED, ASK, PIN_TAP, SHEET, DOWN, SENT, THANKS, END = 40, 50, 170, 210, 236, 300, 330, 380, 396, 430, 436, 512, 524, 556, 780
     m, s = Track(END), Track(END)
     # the old way: a dull uneasy drone, no beat, only the clock
     m.f(0, pad([38, 45, 50, 51], FLIP / FPS, 420), 0.7)
@@ -212,6 +213,12 @@ def sticker_story():
     s.f(DOWN, swish(0.3, 400, 2600, False), 0.5)
     s.f(SENT, ding([77, 81, 84, 89], 0.07), 0.8)
     s.f(THANKS, ding([84, 89], 0.1), 0.6)
+    # flair stickers landing, "Less stress.", phone off, end frame on the bar
+    for f in (60, 216, 228, 530, 542, 564): s.f(f, paper_slap(), 0.4)
+    s.f(588, paper_slap(), 0.7); s.f(588, pop(77), 0.3)
+    s.f(636, swish(0.4), 0.5)
+    s.f(652, paper_slap(), 0.7); s.f(652, ding([77, 81, 84, 89], 0.07), 0.6)
+    s.f(668, swish(0.5, 900, 5000), 0.3); s.f(690, pop(81), 0.3)
     master(m.done(), s.done(), "sticker-story")
 
 

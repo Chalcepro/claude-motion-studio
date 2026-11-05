@@ -26,7 +26,7 @@ const Scribble = () => (
       fill="none" stroke={INK} strokeWidth={16} strokeLinecap="round" />
   </svg>
 );
-const Alarm = () => (
+export const Alarm = () => (
   <Card w={220} h={220} bg={SUN} r={110}>
     <svg width={220} height={220}><circle cx={110} cy={115} r={70} fill={CREAM} />
       <path d="M110 115 V72 M110 115 L142 132" stroke={INK} strokeWidth={14} strokeLinecap="round" /></svg>
@@ -40,8 +40,8 @@ const Bill = () => (
     <div style={{ position: "absolute", bottom: 26, fontSize: 64, fontWeight: 800, color: RED }}>₦₦₦</div>
   </Card>
 );
-const Bang = () => <Card w={190} h={190} bg={INK} r={95}><span style={{ color: CREAM, fontSize: 120, fontWeight: 800, lineHeight: 1 }}>!!</span></Card>;
-const Check = () => (
+export const Bang = () => <Card w={190} h={190} bg={INK} r={95}><span style={{ color: CREAM, fontSize: 120, fontWeight: 800, lineHeight: 1 }}>!!</span></Card>;
+export const Check = () => (
   <Card w={210} h={210} bg={GREEN} r={105}>
     <svg width={120} height={120}><path d="M20 64 L50 94 L102 30" fill="none" stroke="#fff" strokeWidth={20} strokeLinecap="round" strokeLinejoin="round" /></svg>
   </Card>
@@ -50,7 +50,7 @@ const Chip: React.FC<{ text: string }> = ({ text }) => (
   <Card w={360} h={120} bg="#FFFFFF" r={60}><span style={{ fontSize: 50, fontWeight: 700, color: INK }}>{text}</span></Card>
 );
 const Coin = () => <Card w={170} h={170} bg={SUN} r={85}><span style={{ fontSize: 96, fontWeight: 800, color: INK }}>₦</span></Card>;
-const Smile = () => (
+export const Smile = () => (
   <Card w={200} h={200} bg="#FFFFFF" r={100}>
     <svg width={200} height={200}><circle cx={74} cy={84} r={12} fill={INK} /><circle cx={126} cy={84} r={12} fill={INK} />
       <path d="M62 120 Q100 160 138 120" fill="none" stroke={INK} strokeWidth={13} strokeLinecap="round" /></svg>

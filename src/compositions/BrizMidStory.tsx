@@ -1,7 +1,8 @@
 import React from "react";
 import { AbsoluteFill, Audio, Img, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { BRIZ } from "../lib/brands";
-import { onTwos, boil, stickerFilter } from "../lib/sticker";
+import { onTwos, boil, peel, stickerFilter, Sticker } from "../lib/sticker";
+import { Alarm, Bang, Check, Smile } from "./BrizStickerStress";
 import { clamp } from "../lib/primitives";
 import { BgStickerTiles } from "./BrizBackgrounds";
 
@@ -168,8 +169,58 @@ export const BrizMidStory: React.FC = () => {
   return <AbsoluteFill style={{ background: "#CFC8BE" }}><StoryPhone f={f} /></AbsoluteFill>;
 };
 
-// Background + phone + sound. Foreground stickers and text come next.
+// A wind curl that draws itself across, the "breeze" between the logo and the web address.
+const Breeze: React.FC<{ f: number; at: number }> = ({ f, at }) => {
+  const p = interpolate(onTwos(f), [at, at + 22], [1, 0], clamp);
+  return (
+    <svg width={560} height={130} viewBox="0 0 560 130" style={{ position: "absolute", left: 260, top: 1125, overflow: "visible" }}>
+      {["M10 50 H380 a34 34 0 1 0 -34 -34", "M90 92 H470 a26 26 0 1 1 -26 26"].map((d, i) => (
+        <path key={i} d={d} pathLength={1} fill="none" stroke="#FFFFFF" strokeWidth={14} strokeLinecap="round" strokeDasharray="1 1" strokeDashoffset={p} opacity={p < 1 ? 1 : 0} />
+      ))}
+    </svg>
+  );
+};
+const Upset = () => (
+  <div style={{ width: 200, height: 200, borderRadius: 100, background: "#FFFFFF" }}>
+    <svg width={200} height={200}><circle cx={74} cy={88} r={12} fill={INK} /><circle cx={126} cy={88} r={12} fill={INK} />
+      <path d="M62 146 Q100 108 138 146" fill="none" stroke={INK} strokeWidth={13} strokeLinecap="round" /></svg>
+  </div>
+);
+
+export const BRIZ_STICKER_STORY_FRAMES = 780;
+const WORD = 588, PHONE_OUT = 636, END_CARD = 652;
+
+// Background + phone + flair stickers + end frame + sound.
 export const BrizStickerStory: React.FC = () => {
   const f = useCurrentFrame();
-  return <AbsoluteFill style={{ overflow: "hidden" }}><BgStickerTiles /><StoryPhone f={f} /><Audio src={staticFile("audio/sticker-story.wav")} /></AbsoluteFill>;
+  const out = f >= PHONE_OUT ? peel(f, PHONE_OUT, [0, 1]) : null;
+  const S = (p: Omit<React.ComponentProps<typeof Sticker>, "f">) => <Sticker f={f} {...p} />;
+  return (
+    <AbsoluteFill style={{ overflow: "hidden", fontFamily: F }}>
+      <BgStickerTiles />
+      {!out?.gone && <AbsoluteFill style={{ transform: out ? `translate(${out.dx}px, ${out.dy}px) rotate(${out.rot}deg)` : undefined }}><StoryPhone f={f} /></AbsoluteFill>}
+
+      {S({ x: 130, y: 560, at: 60, out: 280, dir: [-1, -0.3], rot: -10, seed: 21, children: <Alarm /> })}
+      {S({ x: 950, y: 1420, at: BEAT.FAILED + 6, out: 284, dir: [1, 0.3], rot: 9, seed: 22, children: <Upset /> })}
+      {S({ x: 130, y: 1500, at: BEAT.FAILED + 18, out: 280, dir: [-1, 0.4], rot: 8, seed: 23, children: <Bang /> })}
+      {S({ x: 950, y: 560, at: BEAT.SENT + 6, out: PHONE_OUT, dir: [1, -0.4], rot: 10, seed: 24, children: <Check /> })}
+      {S({ x: 125, y: 1420, at: BEAT.SENT + 18, out: PHONE_OUT + 2, dir: [-1, 0.4], rot: -9, seed: 25, children: <Smile /> })}
+
+      {S({ x: 540, y: 175, at: WORD, out: PHONE_OUT - 4, dir: [0, -1], rot: -3, seed: 26, children: (
+        <div style={{ background: CREAM, color: INK, borderRadius: 70, padding: "22px 60px", fontSize: 120, fontWeight: 800, letterSpacing: -3, whiteSpace: "nowrap" }}>Less <span style={{ color: RED }}>stress.</span></div>
+      ) })}
+
+      {/* end frame: Briz, the line, the address */}
+      {S({ x: 540, y: 720, at: END_CARD, rot: -2, seed: 27, shadow: "rgba(70,10,0,0.35)", children: (
+        <div style={{ background: CREAM, borderRadius: 90, padding: "60px 80px" }}><Img src={staticFile("briz-logo.png")} style={{ width: 480, display: "block" }} /></div>
+      ) })}
+      {f >= END_CARD && <div style={{ position: "absolute", top: 980, width: W, textAlign: "center", fontSize: 84, fontWeight: 800, letterSpacing: -2, color: "#FFFFFF", opacity: f >= END_CARD + 12 ? 1 : 0 }}>Pay like a breeze.</div>}
+      {f >= END_CARD && <Breeze f={f} at={END_CARD + 16} />}
+      {S({ x: 540, y: 1450, at: END_CARD + 38, rot: 1.5, seed: 28, children: (
+        <div style={{ background: INK, color: CREAM, borderRadius: 60, padding: "24px 56px", fontSize: 58, fontWeight: 700, whiteSpace: "nowrap" }}>paywithbriz.com</div>
+      ) })}
+
+      <Audio src={staticFile("audio/sticker-story.wav")} />
+    </AbsoluteFill>
+  );
 };
