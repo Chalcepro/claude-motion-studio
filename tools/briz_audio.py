@@ -1,6 +1,7 @@
 """Original music + sound effects for the Briz reels, synthesised from scratch with numpy (no samples, no licences).
 Run: python tools/briz_audio.py   ->   public/audio/<reel>.wav  (each cue is placed on a video frame at 30 fps)
 Each reel also gets <reel>-music.wav (music only) so sound can be swapped or remixed."""
+import sys
 import wave
 from pathlib import Path
 import numpy as np
@@ -170,7 +171,7 @@ def groove(tr, start, stop, beat, chords, light_until=None, voice=marimba, g=1.0
         b += beat * 4; bar += 1
 
 
-def master(music, sfx, name):
+def master(music, sfx, name, mute=None):
     n = len(music); ir = rng.standard_normal(int(0.7 * SR)) * np.exp(-ts(0.7) * 7)[: int(0.7 * SR)]
 
     def stereo(x, wet, ms):
@@ -184,27 +185,103 @@ def master(music, sfx, name):
             w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR)
             w.writeframes((st * 32767).astype("<i2").tobytes())
 
+    def hush(st):  # true silence between two frames, whatever the reverb is doing
+        if mute: st = st.copy(); st[fr(mute[0]): fr(mute[1])] = 0
+        return st
+
     mu = stereo(music * 0.62, 0.8, 11)
-    write(mu + stereo(sfx, 0.35, 3), OUT / f"{name}.wav"); write(mu, OUT / f"{name}-music.wav")
+    write(hush(mu + stereo(sfx, 0.35, 3)), OUT / f"{name}.wav"); write(hush(mu), OUT / f"{name}-music.wav")
+
+
+# --- songs: each reel has its own tune, on a beat grid locked to its video cues ---
+def sub(m, d=0.3):
+    t = ts(d); s = np.tanh(1.8 * np.sin(2 * np.pi * hz(m) * t))
+    return s * np.minimum(1, (d - t) / 0.02) * np.exp(-t * 2.5) * (1 - np.exp(-t * 400))
+
+
+def brass(ms, d=0.3, c=2600):
+    t = ts(d); s = 0 * t
+    for m in ms:
+        for det in (-0.08, 0.08):
+            s += 2 * ((hz(m + det) * t) % 1) - 1
+    return lowpass(s, c) * np.minimum(1, t / 0.012) * np.minimum(1, (d - t) / 0.05) * np.exp(-t * 2) / (len(ms) * 2)
+
+
+def cut(x, frame):
+    i = fr(frame); y = x.copy(); k = int(0.006 * SR)
+    y[i:i + k] *= np.linspace(1, 0, k); y[i + k:] = 0
+    return y
+
+
+def song(start, stop, beat, chords, hook, bass, voice, kit, n, drums_from=None, lead=0.42):
+    """Melody `hook` = (16th, midi) over a 2-bar cycle, `bass` = 16ths in a bar, `kit` = afro, pluck or house.
+    Hard-stopped at `stop` so the logo sound gets the room to itself."""
+    tr = Track(n); s16 = beat / 4; bar, b = 0, start
+    drums_from = start if drums_from is None else drums_from
+    while b < stop:
+        ch = chords[bar % len(chords)]; full = b >= drums_from
+        for k in range(16):
+            at = b + k * s16
+            tr.f(at, shaker(0.9 if k % 4 == 2 else 0.45), 0.42)
+            if k in bass: tr.f(at, logdrum(ch[0] - 12) if kit == "afro" else sub(ch[0] - 24, s16 * 1.6 / FPS), 0.5)
+            if not full: continue
+            if kit == "house":
+                if k % 4 == 0: tr.f(at, kick(), 0.95)
+                if k in (4, 12): tr.f(at, clap(), 0.4)
+                if k in (3, 6, 11, 14): tr.f(at, brass(ch, 0.2), 0.5)
+            elif kit == "afro":
+                if k in (0, 6, 8, 14): tr.f(at, kick(), 0.8)
+                if k in (4, 12): tr.f(at, clap(), 0.32)
+            else:  # finger snaps and a soft thump
+                if k in (0, 10): tr.f(at, kick(), 0.5)
+                if k in (4, 12): tr.f(at, click(5200, 0.06), 0.55)
+        for k, m in hook:
+            if k // 16 == bar % 2: tr.f(b + (k % 16) * s16, voice(m), lead)
+        tr.f(b, keys(ch, beat * 4 / FPS), 0.26)
+        b += beat * 4; bar += 1
+    return cut(tr.x, stop)
+
+
+# --- logo sounds, a different one per reel ---
+def logo_breeze():  # sticker story: a soft gust carrying a bell chord up
+    s = np.zeros(int(2.4 * SR)); w = swish(1.2, 900, 6000); s[: len(w)] += w * 0.5
+    for i, m in enumerate((77, 81, 84, 89, 93)):
+        v = kalimba(m, 1.6) + 0.4 * marimba(m + 12, 1.6); j = int(i * 0.06 * SR); s[j: j + len(v)] += v * 0.6
+    return s
+
+
+def logo_pluck():  # paper: a plucked ta-da that lands on a low note
+    s = np.zeros(int(2 * SR))
+    for at, m, g in ((0, 67, 0.7), (0.1, 72, 0.8), (0.27, 48, 1.0), (0.27, 79, 0.8)):
+        v = kalimba(m, 1.5); j = int(at * SR); s[j: j + len(v)] += v * g
+    return s
+
+
+def logo_power():  # crowd: a sub hit under one held brass chord
+    a = impact(); b = brass([57, 64, 69, 76], 1.5, 3200) * 0.9
+    s = np.zeros(max(len(a), len(b))); s[: len(a)] += a * 0.7; s[: len(b)] += b
+    return s
 
 
 def sticker_story():
     TAP, PROC, PEND, FAIL, COMPLAIN, FLIP, TYPE, TYPED, ASK, PIN_TAP, SHEET, DOWN, SENT, THANKS, END = 40, 50, 170, 210, 236, 300, 330, 380, 396, 430, 436, 512, 524, 556, 780
+    OPEN, HUSH, LOGO, beat = 262, 292, 652, 16  # build OPEN-HUSH, silence HUSH-FLIP; the grid puts FLIP, SENT and LOGO on beats
     m, s = Track(END), Track(END)
-    # the old way: a dull uneasy drone, no beat, only the clock
-    m.f(0, pad([38, 45, 50, 51], FLIP / FPS, 420), 0.7)
-    m.f(PEND, pad([37, 44, 49], (FLIP - PEND) / FPS, 300), 0.5)
+    # the old way: the calm drone, then its filter opens into the flip
+    dull = pad([38, 45, 50, 51], (HUSH + 20) / FPS, 420); bright = pad([38, 45, 50, 51], (HUSH + 20) / FPS, 6000)
+    p = np.clip((np.arange(len(dull)) / SR * FPS - OPEN) / (HUSH - OPEN), 0, 1) ** 2
+    m.f(0, dull * (1 - p) + bright * p * 1.1, 0.7)
+    m.f(PEND, pad([37, 44, 49], (HUSH + 20 - PEND) / FPS, 300), 0.5)
+    m.x = cut(m.x, HUSH)
     s.f(TAP, click(), 0.8)
     for f in range(PROC, PEND, 15): s.f(f, tick_clock(), 0.42)
     s.f(PEND, bonk(50), 0.45); s.f(FAIL, bonk(43), 0.8); s.f(FAIL + 7, bonk(41), 0.7)
     s.f(COMPLAIN, ding([64, 60], 0.12), 0.45)
-    # Briz: a bright groove on a grid locked so the full drums land exactly on "Sent"
-    beat = 16
-    chords = [[65, 69, 72], [60, 64, 67], [62, 65, 69], [58, 62, 65]]
-    g = Track(END); groove(g, SENT - beat * 16, END - beat * 2, beat, chords, light_until=SENT)
-    g.x[: fr(FLIP - 2)] = 0; m.x += g.x
-    m.f(END - beat * 2, keys([53, 65, 69, 72, 77], 2.0), 0.45)
-    s.f(FLIP - 10, swish(0.45), 0.7)
+    s.f(OPEN, riser((HUSH - OPEN) / FPS), 0.75)
+    # Briz: the song starts on the reveal; its drums join on "Sent"
+    chords = [[65, 69, 72], [62, 65, 69], [58, 62, 65], [60, 64, 67]]
+    hook = [(0, 77), (3, 79), (6, 81), (10, 84), (13, 81), (16, 79), (19, 77), (22, 74), (26, 72), (29, 74)]
+    m.x += song(FLIP, LOGO, beat, chords, hook, (0, 3, 6, 10, 13), marimba, "afro", END, drums_from=SENT)
     for i in range(15): s.f(TYPE + i * (TYPED - TYPE) / 15, click(3200), 0.32)
     s.f(TYPED + 6, swish(0.18, 700, 3600), 0.5); s.f(TYPED + 8, pop(76), 0.3)
     s.f(ASK, pop(72), 0.45)
@@ -213,52 +290,91 @@ def sticker_story():
     s.f(DOWN, swish(0.3, 400, 2600, False), 0.5)
     s.f(SENT, ding([77, 81, 84, 89], 0.07), 0.8)
     s.f(THANKS, ding([84, 89], 0.1), 0.6)
-    # flair stickers landing, "Less stress.", phone off, end frame on the bar
+    # flair stickers landing, "Less stress.", phone off, end frame in the clear
     for f in (60, 216, 228, 530, 542, 564): s.f(f, paper_slap(), 0.4)
     s.f(588, paper_slap(), 0.7); s.f(588, pop(77), 0.3)
     s.f(636, swish(0.4), 0.5)
-    s.f(652, paper_slap(), 0.7); s.f(652, ding([77, 81, 84, 89], 0.07), 0.6)
-    s.f(668, swish(0.5, 900, 5000), 0.3); s.f(690, pop(81), 0.3)
-    master(m.done(), s.done(), "sticker-story")
+    s.f(LOGO, paper_slap(), 0.7); s.f(LOGO, logo_breeze(), 0.6)
+    s.f(690, pop(81), 0.3)
+    master(m.done(), s.done(), "sticker-story", mute=(HUSH, FLIP))
 
 
 def paper_easy():
-    END, beat, a = 360, 16, 10  # 112.5 bpm: every card lands on a beat
+    END, beat, a, LOGO = 360, 16, 10, 296  # 112.5 bpm: every card lands on a beat
     m, s = Track(END), Track(END)
     chords = [[60, 64, 67, 71], [57, 60, 64, 67], [53, 57, 60, 64], [55, 59, 62, 65]]
-    groove(m, a, 292, beat, chords, light_until=a + beat * 8, voice=kalimba, g=0.85)
-    groove(m, 292, END - beat * 2, beat, chords[:2], light_until=999, voice=kalimba, g=0.6)
-    m.f(END - beat * 2, keys([48, 60, 64, 67, 72], 1.8), 0.4)
+    hook = [(0, 76), (2, 79), (4, 84), (8, 83), (10, 79), (14, 76), (16, 74), (18, 76), (20, 79), (24, 72), (28, 74)]
+    m.x += song(a, LOGO, beat, chords, hook, (0, 7, 10), kalimba, "pluck", END, drums_from=a + beat * 8, lead=0.5)
     for f in (10, 58, 106): s.f(max(0, f - 8), paper_fly(), 0.45); s.f(f, paper_slap(), 0.75)
     s.f(160, swish(0.3, 500, 3000), 0.4); s.f(176, paper_slap(), 0.7); s.f(232, paper_fly(), 0.7); s.f(232, swish(0.4), 0.45)
     for i in range(4): s.f(246 + i * 6, paper_slap(), 0.55)
-    s.f(286, paper_fly(), 0.55); s.f(296, paper_slap(), 0.8); s.f(296, ding([72, 76, 79, 84], 0.07, kalimba), 0.7)
+    s.f(286, paper_fly(), 0.55); s.f(LOGO, paper_slap(), 0.8); s.f(LOGO, logo_pluck(), 0.7)
     s.f(308, paper_slap(), 0.5)
     master(m.done(), s.done(), "paper-easy")
 
 
 def power_crowd():
-    END, ANT, PUSH, BACK, beat = 420, 150, 200, 352, 15  # 120 bpm, grid locked to PUSH
+    END, ANT, PUSH, BACK, LOGO, beat = 420, 150, 200, 352, 350, 15  # 120 bpm, grid locked to PUSH; LOGO = the text leaving, on a bar
     m, s = Track(END, wrap=True), Track(END, wrap=True)
     chords = [[57, 60, 64], [53, 57, 60], [60, 64, 67], [55, 59, 62]]
-    muffled = Track(END + 90)  # the crowd's music heard from inside the crowd
-    groove(muffled, PUSH - beat * 16, PUSH, beat, chords, light_until=999, g=0.9)
-    groove(muffled, BACK + beat * 2, END, beat, chords, light_until=999, g=0.9)
-    m.x += lowpass(muffled.x, 1100)[: len(m.x)] * 0.9
-    for f in range(PUSH % beat, PUSH, beat): m.f(f, kick(), 0.45)
+    hook = [(0, 81), (3, 81), (6, 84), (8, 83), (12, 79), (16, 81), (19, 76), (22, 79), (24, 76), (28, 74)]
+    voice = lambda n: brass([n], 0.3, 3000)
+    tune = song(PUSH % (beat * 4), LOGO, beat, chords, hook, (0, 3, 6, 10, 13), voice, "house", END, lead=0.5)
+    i = fr(PUSH)  # heard from inside the crowd until the phone is shown
+    m.x[:i] += lowpass(tune, 1100)[:i] * 0.45; m.x[i:] += tune[i:] * 1.05
     m.f(0, pad([45, 52, 57], ANT / FPS, 500), 0.4)
+    m.f(BACK + 20, pad([45, 52, 57], (END - BACK - 20) / FPS, 500), 0.4)  # back to the opening drone so the loop joins
     for f, up in ((16, 0), (46, 1), (76, 0), (104, 1), (128, 0)): s.f(f, ding([81 + up * 5, 88 + up * 5], 0.06), 0.45)
     for f in range(4, ANT, 9): s.f(f, click(2600), 0.16)
     s.f(ANT, riser((PUSH - ANT) / FPS), 0.75)
-    # the phone is shown: everything opens up
-    groove(m, PUSH, BACK + beat * 2, beat, chords, g=1.15)
-    m.f(PUSH, pad([45, 57, 64, 69], (BACK - PUSH) / FPS, 1600), 0.3)
+    m.f(PUSH, pad([45, 57, 64, 69], (LOGO - PUSH) / FPS, 1600), 0.3)
     s.f(PUSH, impact(), 0.75)
+    s.f(LOGO, logo_power(), 0.75)
     s.f(BACK, swish(0.5, 400, 2500, False), 0.5)
     master(m.done(), s.done(), "power-crowd")
 
 
+def logo_chime():  # who's paying: three warm pops and an open chord
+    s = np.zeros(int(2 * SR))
+    for at, m in ((0, 72), (0.09, 76), (0.18, 79)):
+        v = pop(m); j = int(at * SR); s[j: j + len(v)] += v
+    v = keys([60, 67, 72, 76, 84], 1.7); j = int(0.27 * SR); s[j: j + len(v)] += v * 1.6
+    return s
+
+
+def whos_paying():
+    END, SLAM, UP, PUSH, SENT, DONE, BURST, LAND, CARD, beat = 300, 18, 66, 90, 117, 138, 153, 195, 249, 16
+    m, s = Track(END), Track(END)
+    m.f(0, pad([40, 47, 52], (BURST - 6) / FPS, 450), 0.6)
+    s.f(SLAM - 6, paper_fly(), 0.5); s.f(SLAM, impact(), 0.6); s.f(SLAM, paper_slap(), 0.9)
+    for f in range(33, UP, 12): s.f(f, tick_clock(), 0.4)
+    s.f(UP, swish(0.3, 500, 3200), 0.5); s.f(PUSH, swish(0.35, 500, 3600), 0.5)
+    for f in range(SENT - 18, SENT, 3): s.f(f, click(3200), 0.32)
+    s.f(SENT, pop(76), 0.45); s.f(DONE, ding([84, 89], 0.08), 0.6)
+    s.f(BURST - 12, riser(12 / FPS), 0.5); s.f(BURST, impact(), 0.45)
+    for f in range(BURST + 15, LAND, 3): s.f(f, ding([86 + f % 7], 0.05), 0.16)
+    chords = [[67, 71, 74], [64, 67, 71], [60, 64, 67], [62, 66, 69]]
+    hook = [(0, 79), (3, 83), (6, 86), (8, 83), (11, 79), (14, 81), (16, 78), (19, 81), (22, 83), (27, 79)]
+    m.x += song(BURST, CARD, beat, chords, hook, (0, 3, 6, 10, 13), marimba, "afro", END)
+    s.f(CARD, paper_slap(), 0.8); s.f(CARD, logo_chime(), 0.6)
+    master(m.done(), s.done(), "whos-paying")
+
+
+def briz_banner():  # 8 s loop, frames match BrizBanner.tsx
+    END, LAND, beat = 240, 24, 16
+    m, s = Track(END), Track(END)
+    s.f(0, swish(0.7, 400, 3800), 0.5); s.f(LAND, impact(), 0.5); s.f(LAND, logo_breeze(), 0.55)
+    chords = [[60, 64, 67], [57, 60, 64], [65, 69, 72], [67, 71, 74]]
+    hook = [(0, 76), (3, 79), (6, 84), (8, 79), (11, 76), (14, 79), (16, 74), (19, 77), (22, 79), (27, 76)]
+    m.x += song(LAND, 222, beat, chords, hook, (0, 3, 6, 10, 13), marimba, "afro", END)
+    for at, n in ((84, 72), (118, 76), (152, 79)):
+        s.f(at - 8, swish(0.27, 700, 4200), 0.45); s.f(at, pop(n), 0.5)
+    s.f(192, logo_chime(), 0.6); s.f(218, swish(0.5, 3800, 500, False), 0.35)
+    master(m.done(), s.done(), "briz-banner")
+
+
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
-    sticker_story(); paper_easy(); power_crowd()
+    if "banner" in sys.argv: briz_banner(); print("ok"); sys.exit()
+    whos_paying() if "whos" in sys.argv else (sticker_story(), paper_easy(), power_crowd())
     print("ok")
