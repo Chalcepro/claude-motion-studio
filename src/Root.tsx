@@ -10,6 +10,7 @@ import { chats, wipes, pendulums } from "./compositions/library";
 import { BrizPowerFlat, BRIZ_POWER_FLAT_FRAMES } from "./compositions/BrizPowerFlat";
 import { BACKGROUNDS, BG_FRAMES } from "./compositions/BrizBackgrounds";
 import { BrizBioPass, BRIZ_BIOPASS_FRAMES } from "./compositions/BrizBioPass";
+import { BrizBioPassOverlay, BIOPASS_REC_FRAMES } from "./compositions/BrizBioPassOverlay";
 import { BrizMidStory, BrizStickerStory, BRIZ_MID_STORY_FRAMES, BRIZ_STICKER_STORY_FRAMES } from "./compositions/BrizMidStory";
 import { BrizStickerStress, BRIZ_STICKER_STRESS_FRAMES } from "./compositions/BrizStickerStress";
 import { BrizBanner, BRIZ_BANNER_FRAMES } from "./compositions/BrizBanner";
@@ -41,6 +42,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="BrizRowsC" component={BrizRows} width={1080} height={1920} fps={30} durationInFrames={BRIZ_ROWS_FRAMES} defaultProps={{ look: "bubbles" as const }} />
     {Object.entries(BACKGROUNDS).map(([id, C]) => <Composition key={id} id={id} component={C} width={1080} height={1920} fps={30} durationInFrames={BG_FRAMES} />)}
     <Composition id="BrizMidStory" component={BrizMidStory} width={1080} height={1920} fps={30} durationInFrames={BRIZ_MID_STORY_FRAMES} />
+    <Composition id="BrizBioPassOverlay" component={BrizBioPassOverlay} width={1080} height={1920} fps={30} durationInFrames={BIOPASS_REC_FRAMES} />
     <Composition id="BrizBioPass" component={BrizBioPass} width={1080} height={1920} fps={30} durationInFrames={BRIZ_BIOPASS_FRAMES} />
     <Composition id="BrizStickerStory" component={BrizStickerStory} width={1080} height={1920} fps={30} durationInFrames={BRIZ_STICKER_STORY_FRAMES} />
     <Composition id="BrizStickerStress" component={BrizStickerStress} width={1080} height={1920} fps={30} durationInFrames={BRIZ_STICKER_STRESS_FRAMES} />

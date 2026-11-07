@@ -8,10 +8,10 @@ import numpy as np
 
 CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 WORK = Path("out/biopass"); WORK.mkdir(parents=True, exist_ok=True)
-FINAL = Path.home() / "Documents/Briz motion/Briz BioPass walkthrough v1 (no voiceover).mp4"
+FINAL = Path.home() / "Documents/Briz motion/Briz BioPass walkthrough v3.mp4"
 # frame ranges from BrizBioPass.tsx
 PRE, CARD2, OUTRO = "0-214", "2105-2164", "3313-3422"
-SPLIT = 63; X, Y, W, H, R = 157, 150, 765, 1700, 54
+SPLIT = 63; MUSIC_GAIN = 0.2
 
 
 def run(cmd):
@@ -37,18 +37,20 @@ def shell(frame, name):
 
 
 clip(PRE, "pre.mp4"); clip(CARD2, "card2.mp4"); clip(OUTRO, "outro.mp4")
-s1, s2 = shell(300, "shell1"), shell(2250, "shell2")
+overlay = WORK / "overlay.webm"
+if not overlay.exists():
+    run(f'npx remotion render BrizBioPassOverlay "{overlay}" --codec=vp8 --pixel-format=yuva420p --image-format=png --concurrency=2 --browser-executable="{CHROME}"')
 rec = "public/biopass-blurred.mp4"
+OUTRO_S = 3313 / 30
 fc = (
-    f"[1:v]trim=0:{SPLIT},setpts=PTS-STARTPTS,scale={W}:{H},pad=1080:1920:{X}:{Y}:black,fps=30[r1];"
-    f"[1:v]trim={SPLIT},setpts=PTS-STARTPTS,scale={W}:{H},pad=1080:1920:{X}:{Y}:black,fps=30[r2];"
-    "[r1][2:v]overlay=0:0:shortest=1[p1];[r2][3:v]overlay=0:0:shortest=1[p2];"
-    "[0:v]format=yuv420p,fps=30[a];[4:v]format=yuv420p,fps=30[b];[5:v]format=yuv420p,fps=30[c];"
-    "[p1]format=yuv420p[p1f];[p2]format=yuv420p[p2f];"
-    "[a][p1f][b][p2f][c]concat=n=5:v=1:a=0[v];"
-    f"[7:a]adelay={int(3313 / 30 * 1000)}:all=1[o];[6:a][o]amix=inputs=2:normalize=0:duration=longest,apad[au]"
+    "[1:v]scale=864:1920,pad=1080:1920:108:0:0x0B0F14,fps=30[base];[base][2:v]overlay=0:0:format=auto,format=yuv420p,split[o1][o2];"
+    f"[o1]trim=0:{SPLIT},setpts=PTS-STARTPTS[p1];[o2]trim={SPLIT},setpts=PTS-STARTPTS[p2];"
+    "[0:v]format=yuv420p,fps=30[a];[3:v]format=yuv420p,fps=30[b];[4:v]format=yuv420p,fps=30[c];"
+    "[a][p1][b][p2][c]concat=n=5:v=1:a=0[v];"
+    f"[8:a]volume={MUSIC_GAIN},afade=t=in:d=2,afade=t=out:st={OUTRO_S - 1.5:.2f}:d=1.5[m];"
+    f"[6:a]adelay={int(OUTRO_S * 1000)}:all=1[o];[5:a][o][7:a][m]amix=inputs=4:normalize=0:duration=longest[au]"
 )
-run(f'ffmpeg -y -loglevel error -stats -i "{WORK / "pre.mp4"}" -i {rec} -loop 1 -i "{s1}" -loop 1 -i "{s2}" -i "{WORK / "card2.mp4"}" -i "{WORK / "outro.mp4"}" '
-    f'-i public/audio/biopass-sting.wav -i public/audio/biopass-outro.wav -filter_complex "{fc}" -map [v] -map [au] -shortest '
-    f'-c:v libx264 -crf 18 -preset fast -c:a aac -b:a 192k -movflags +faststart "{FINAL}"')
+run(f'ffmpeg -y -loglevel error -stats -i "{WORK / "pre.mp4"}" -i {rec} -c:v libvpx -i "{overlay}" -i "{WORK / "card2.mp4"}" -i "{WORK / "outro.mp4"}" '
+    f'-i public/audio/biopass-sting.wav -i public/audio/biopass-outro.wav -i public/audio/biopass/voiceover-track.wav -i public/audio/biopass/music-sungiu.mp3 '
+    f'-filter_complex "{fc}" -map [v] -map [au] -t 114.1 -c:v libx264 -crf 18 -preset fast -c:a aac -b:a 192k -movflags +faststart "{FINAL}"')
 print("RENDER DONE", flush=True)
