@@ -9,7 +9,8 @@ import { BrizWipe, brizWipeDefaults, wipeFrames } from "./compositions/BrizWipe"
 import { chats, wipes, pendulums } from "./compositions/library";
 import { BrizPowerFlat, BRIZ_POWER_FLAT_FRAMES } from "./compositions/BrizPowerFlat";
 import { BACKGROUNDS, BG_FRAMES } from "./compositions/BrizBackgrounds";
-import { BrizBioPass, BRIZ_BIOPASS_FRAMES } from "./compositions/BrizBioPass";
+import { BrizBioPass, BRIZ_BIOPASS_FRAMES, SHORT, layout } from "./compositions/BrizBioPass";
+import biopassShort from "./compositions/biopass-short.json";
 import { BrizBioPassOverlay, BIOPASS_REC_FRAMES } from "./compositions/BrizBioPassOverlay";
 import { BrizMidStory, BrizStickerStory, BRIZ_MID_STORY_FRAMES, BRIZ_STICKER_STORY_FRAMES } from "./compositions/BrizMidStory";
 import { BrizStickerStress, BRIZ_STICKER_STRESS_FRAMES } from "./compositions/BrizStickerStress";
@@ -43,6 +44,9 @@ export const RemotionRoot: React.FC = () => (
     {Object.entries(BACKGROUNDS).map(([id, C]) => <Composition key={id} id={id} component={C} width={1080} height={1920} fps={30} durationInFrames={BG_FRAMES} />)}
     <Composition id="BrizMidStory" component={BrizMidStory} width={1080} height={1920} fps={30} durationInFrames={BRIZ_MID_STORY_FRAMES} />
     <Composition id="BrizBioPassOverlay" component={BrizBioPassOverlay} width={1080} height={1920} fps={30} durationInFrames={BIOPASS_REC_FRAMES} />
+    <Composition id="BrizBioPassShort" component={BrizBioPass} width={1080} height={1920} fps={30} durationInFrames={layout(SHORT).total} defaultProps={{ timing: SHORT }} />
+    <Composition id="BrizBioPassOverlayShort" component={BrizBioPassOverlay} width={1080} height={1920} fps={30} durationInFrames={biopassShort.frames}
+      defaultProps={{ steps: biopassShort.steps as [number, string][], split: biopassShort.split, frames: biopassShort.frames }} />
     <Composition id="BrizBioPass" component={BrizBioPass} width={1080} height={1920} fps={30} durationInFrames={BRIZ_BIOPASS_FRAMES} />
     <Composition id="BrizStickerStory" component={BrizStickerStory} width={1080} height={1920} fps={30} durationInFrames={BRIZ_STICKER_STORY_FRAMES} />
     <Composition id="BrizStickerStress" component={BrizStickerStress} width={1080} height={1920} fps={30} durationInFrames={BRIZ_STICKER_STRESS_FRAMES} />

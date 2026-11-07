@@ -1,0 +1,38 @@
+{
+ "frames": 2202,
+ "split": 1083,
+ "steps": [
+  [
+   0,
+   "Open BioPass"
+  ],
+  [
+   240,
+   "Set Emergency PIN"
+  ],
+  [
+   690,
+   "Fund Emergency Wallet"
+  ],
+  [
+   1083,
+   "Find customer"
+  ],
+  [
+   1392,
+   "Enter amount"
+  ],
+  [
+   1578,
+   "Customer pays"
+  ],
+  [
+   1902,
+   "Payment received"
+  ],
+  [
+   2088,
+   "WhatsApp receipt"
+  ]
+ ]
+}
