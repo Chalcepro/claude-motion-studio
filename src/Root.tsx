@@ -22,6 +22,8 @@ import { BrizPower, BRIZ_POWER_FRAMES } from "./compositions/BrizPower";
 import { BrizRows, BRIZ_ROWS_FRAMES } from "./compositions/BrizRows";
 import { NoirPendulum, noirPendulumDefaults, noirPendulumDuration } from "./compositions/NoirPendulum";
 import { BrizPendulum, brizPendulumDefaults, brizPendulumDuration } from "./compositions/BrizPendulum";
+import { BrizAjoIllustrated, BRIZ_AJO_ILLUSTRATED_FRAMES } from "./compositions/BrizAjoIllustrated";
+import { BrizCryptoAd, BRIZ_CRYPTO_AD_FRAMES } from "./compositions/BrizCryptoAd";
 
 /**
  * Register every composition here. Render by id:
@@ -70,5 +72,7 @@ export const RemotionRoot: React.FC = () => (
         durationInFrames={(id.startsWith("Noir") ? noirPendulumDuration : brizPendulumDuration)(p.pairs.length)} defaultProps={p} />
     ))}
     <Composition id="BrizPictureEdit" component={BrizPictureEdit} width={1080} height={1920} fps={30} durationInFrames={BRIZ_PICTURE_FRAMES} />
+    <Composition id="BrizAjoIllustrated" component={BrizAjoIllustrated} width={1080} height={1920} fps={30} durationInFrames={BRIZ_AJO_ILLUSTRATED_FRAMES} />
+    <Composition id="BrizCryptoAd" component={BrizCryptoAd} width={1080} height={1920} fps={30} durationInFrames={BRIZ_CRYPTO_AD_FRAMES} />
   </>
 );
