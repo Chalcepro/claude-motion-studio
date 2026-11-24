@@ -3,16 +3,16 @@ import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } f
 import { loadFont } from "@remotion/google-fonts/Inter";
 
 // The two phone screens of the Briz crypto ad, rendered as image sequences on the FILM's clock
-// (frame N here = frame N in crypto_02_conversation.blend) and mapped onto the 3D phones.
+// (frame N here = frame N in crypto_03_final.blend) and mapped onto the 3D phones.
 const F = loadFont("normal", { weights: ["500", "600", "700", "800"] }).fontFamily;
-export const PH_W = 900, PH_H = 1925, BRIZ_CRYPTO_PHONES_FRAMES = 1020;
+export const PH_W = 900, PH_H = 1925, BRIZ_CRYPTO_PHONES_FRAMES = 1672;
 const C = { bg: "#0C1412", panel: "#18211E", line: "#26322E", ink: "#F6F3EA", dim: "#8FA39B", green: "#25C05A", me: "#0F5A3C", them: "#1D2825", red: "#E72E08", cream: "#FDEBD0", teal: "#26A17B", key: "#39433F", kb: "#141B19" };
 
 // ---- beats (film frames) ----
 export const B = {
-  NOTIF: 34, OPEN: 110, M2: 134, M3: 156, T1: 172, SEND1: 218, BACK: 232, TAP_BRIZ: 254, TMENU: 268, SENDM: 284, REPLY: 294, CHOOSE: 316,
-  CRYPTO: 344, TOWALLET: 370, CONT: 386, NET: 404, TRON: 424, PASTE: 442, A1: 456, A2: 464, REVIEW: 482, TOPIN: 516, PIN: [538, 547, 556, 565], SENT: 578,
-  ARRIVE: 602, G_OPEN: 648, G_TYPE: 668, G_SEND: 716, R_CHAT: 690, R_GOT: 722, R_TYPE: 744, R_SEND: 792, SLEEP: 856,
+  NOTIF: 34, OPEN: 128, M2: 178, M3: 222, T1: 266, SEND1: 326, BACK: 368, TAP_BRIZ: 412, TMENU: 450, SENDM: 476, REPLY: 500, CHOOSE: 552,
+  CRYPTO: 602, TOWALLET: 654, CONT: 684, NET: 734, TRON: 784, PASTE: 832, A1: 870, A2: 882, REVIEW: 922, TOPIN: 990, PIN: [1030, 1043, 1060, 1073], SENT: 1091,
+  ARRIVE: 1127, G_OPEN: 1196, G_TYPE: 1234, G_SEND: 1290, R_CHAT: 1250, R_GOT: 1312, R_TYPE: 1362, R_SEND: 1414, G_GOT: 1434, SLEEP: 1508,
 };
 const TXT = { reply: "Say less. Sending now", menu: "Menu", wow: "Whoa, that was fast!", thanks: "All thanks to Briz" };
 const RATE = 2;
@@ -44,7 +44,7 @@ const Head: React.FC<{ who: string; sub: string; tick?: boolean }> = ({ who, sub
   <div style={box({ left: 0, right: 0, top: 0, height: 262, background: C.panel, borderBottom: `4px solid ${C.line}`, display: "flex", alignItems: "flex-end", gap: 26, padding: "0 36px 24px", zIndex: 10 })}>
     <svg width={44} height={92} viewBox="0 0 44 92"><path d="M34 22 12 46l22 24" fill="none" stroke={C.ink} strokeWidth={9} strokeLinecap="round" strokeLinejoin="round" /></svg>
     <Avatar who={who} s={104} />
-    <div><div style={{ fontSize: 50, fontWeight: 700, color: C.ink, display: "flex", gap: 14, alignItems: "center" }}>{who === "Briz" ? "Briz Line" : who}{tick && <svg width={42} height={42} viewBox="0 0 42 42"><circle cx={21} cy={21} r={20} fill="#2E8BFF" /><path d="m12 22 6 6 12-13" stroke="#fff" strokeWidth={5} fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>}</div><div style={{ fontSize: 34, fontWeight: 500, color: C.dim }}>{sub}</div></div>
+    <div><div style={{ fontSize: 50, fontWeight: 700, color: C.ink, display: "flex", gap: 14, alignItems: "center" }}>{who}{tick && <svg width={42} height={42} viewBox="0 0 42 42"><circle cx={21} cy={21} r={20} fill="#2E8BFF" /><path d="m12 22 6 6 12-13" stroke="#fff" strokeWidth={5} fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>}</div><div style={{ fontSize: 34, fontWeight: 500, color: C.dim }}>{sub}</div></div>
   </div>
 );
 
@@ -150,7 +150,7 @@ const BrizFlow: React.FC = () => {
     <Page at={B.CRYPTO + 4}><Sheet title="Crypto" prog={38} btn="Continue" on={f >= B.TOWALLET} press={pr(B.CONT)}><Card /><div style={{ ...TITLE, marginTop: 34 }}>Dollar wallet</div><div style={{ fontSize: 42, fontWeight: 700, color: C.ink, margin: "26px 0 18px" }}>What would you like to do?</div>
       <div style={{ background: C.panel, borderRadius: 36, overflow: "hidden" }}><Row t="Send to a wallet" s="Choose the network" hot={f >= B.TOWALLET} check={f >= B.TOWALLET} h={136} /><Row t="Sell dollars for naira" s="Naira goes to your Briz wallet" h={136} /><Row t="Add money with naira" s="Auto-converted to USDT" h={136} /><Row t="Receive USDT" s="Choose a network, get your address" h={136} /></div></Sheet></Page>
     <Page at={B.CONT + 4}><Sheet title="Send Crypto" prog={52} btn="Review transfer" on={ready} press={pr(B.REVIEW)}><div style={TITLE}>Send Crypto</div><div style={{ fontSize: 42, color: C.ink, fontWeight: 500, marginTop: 8 }}>Send USDT to an external wallet.</div><div style={{ fontSize: 36, color: C.dim, fontWeight: 600, marginTop: 24 }}>Available balance</div><div style={{ fontSize: 60, color: C.ink, fontWeight: 800 }}>$120.00 USDT</div>
-      <Field l="Network" v={f >= B.TRON + 4 ? "Tron (TRC-20)" : ""} hot={pr(B.NET)} /><Field l="Recipient wallet..." v={f >= B.PASTE ? "TQ7x…9fKd" : ""} hot={f >= B.PASTE - 6 && f < B.A1 - 4} /><Field l="Amount to send..." v={amt ? "$" + amt : ""} hot={f >= B.A1 - 4 && f < B.REVIEW} />
+      <Field l="Network" v={f >= B.TRON + 4 ? "Tron (TRC-20)" : ""} hot={pr(B.NET)} /><Field l="Recipient wallet..." v={f >= B.PASTE ? "TQ7x…9fKd" : ""} hot={f >= B.PASTE - 6 && f < B.A1 - 16} /><Field l="Amount to send..." v={amt ? "$" + amt : ""} hot={f >= B.A1 - 16 && f < B.REVIEW} />
       <div style={{ fontSize: 34, color: C.dim, fontWeight: 500, marginTop: 30, lineHeight: 1.35 }}>Network fee $1.00 + Briz fee 1% (min $0.25, max $5.00).</div></Sheet></Page>
     {f < B.TRON + 14 && <div style={box({ inset: 0, transform: `translateX(${ease(f, B.TRON + 4, 9) * 100}%)` })}><Page at={B.NET + 4}><Sheet title="Network" prog={52}><div style={{ background: C.panel, borderRadius: 36, overflow: "hidden" }}><Row t="Tron (TRC-20) (min $10)" c="#E0263C" g="T" hot={f >= B.TRON - 3} /><Row t="Solana (min $1)" c="#1B1530" g="S" /><Row t="BSC (BEP-20) (min $1)" c="#E3A812" g="B" /><Row t="Polygon (min $1)" c="#6A2BE0" g="P" /><Row t="Ethereum (min $1)" c="#5B6A88" g="E" /><Row t="Arbitrum (min $1)" c="#2B6FC0" g="A" /><Row t="Optimism (min $1)" c="#F0142F" g="O" /></div></Sheet></Page></div>}
     <Page at={B.REVIEW + 4}><Sheet title="Confirm" prog={70} btn="Continue to PIN" on press={pr(B.TOPIN)}><div style={TITLE}>Review and confirm</div>
@@ -179,14 +179,14 @@ const RedPhone: React.FC = () => {
     <Lock time="7:12" c={["#8F0A18", "#B80F1E", "#DB1726"]} at={B.NOTIF} icon={<ChatIcon s={120} />} from="WhatsApp" title="Tunde" body={ASK} />
     <Page at={B.OPEN + 4}><Head who="Tunde" sub="online" /><Bubbles msgs={before} bottom={132 + KB_H * kb1} /><Input text={f < B.SEND1 ? typed(TXT.reply, B.T1, f) : ""} bottom={KB_H * kb1} press={f >= B.SEND1 - 3 && f < B.SEND1 + 3} /><Keyboard k={keyAt(TXT.reply, B.T1, f)} y={KB_H * (1 - kb1)} /></Page>
     <Page at={B.BACK + 2}><div style={box({ left: 44, top: 150, fontSize: 96, fontWeight: 800, color: C.ink })}>Chats</div>
-      <div style={box({ left: 0, right: 0, top: 310 })}>{([["Tunde", "You: " + TXT.reply], ["Briz", "What would you like to do today?"], ["Family", "Mum: Have you eaten?"], ["Gym guys", "Leg day tomorrow"]] as const).map(([a, b], i) => <div key={a} style={{ display: "flex", gap: 32, alignItems: "center", height: 200, padding: "0 44px", background: i === 1 && f >= B.TAP_BRIZ - 3 ? "#22302B" : "transparent", borderBottom: `3px solid ${C.line}` }}><Avatar who={a} s={124} /><div><div style={{ fontSize: 52, fontWeight: 700, color: C.ink }}>{a === "Briz" ? "Briz Line" : a}</div><div style={{ fontSize: 40, fontWeight: 500, color: C.dim }}>{b}</div></div></div>)}</div></Page>
+      <div style={box({ left: 0, right: 0, top: 310 })}>{([["Tunde", "You: " + TXT.reply], ["Briz", "What would you like to do today?"], ["Family", "Mum: Have you eaten?"], ["Gym guys", "Leg day tomorrow"]] as const).map(([a, b], i) => <div key={a} style={{ display: "flex", gap: 32, alignItems: "center", height: 200, padding: "0 44px", background: i === 1 && f >= B.TAP_BRIZ - 3 ? "#22302B" : "transparent", borderBottom: `3px solid ${C.line}` }}><Avatar who={a} s={124} /><div><div style={{ fontSize: 52, fontWeight: 700, color: C.ink }}>{a}</div><div style={{ fontSize: 40, fontWeight: 500, color: C.dim }}>{b}</div></div></div>)}</div></Page>
     <Page at={B.TAP_BRIZ + 4}><Head who="Briz" sub="Briz by Noirtech" tick /><Bubbles bottom={132 + KB_H * kbM} msgs={[{ at: B.SENDM, me: true, t: "Menu" }, { at: B.REPLY, t: "", node: <div style={{ width: 720 }}><div style={{ background: C.cream, color: "#12070A", padding: "36px 40px", fontSize: 74, fontWeight: 700, lineHeight: 1.1 }}>You're Here.<br />Welcome to <span style={{ color: C.red }}>Briz</span></div><div style={{ padding: "28px 40px", fontSize: 44 }}>Balance: $120.00 USDT<br /><br />What would you like to do today?</div><div style={{ borderTop: `4px solid ${C.line}`, textAlign: "center", padding: "28px 0", color: C.green, fontSize: 48, fontWeight: 700 }}>Choose Action</div></div> }]} />
       <Input text={f < B.SENDM ? typed(TXT.menu, B.TMENU, f) : ""} bottom={KB_H * kbM} press={f >= B.SENDM - 3 && f < B.SENDM + 3} /><Keyboard k={keyAt(TXT.menu, B.TMENU, f)} y={KB_H * (1 - kbM)} /></Page>
     <BrizFlow />
     <Page at={B.R_CHAT}><Head who="Tunde" sub={f > B.G_TYPE && f < B.R_GOT ? "typing…" : "online"} /><Bubbles msgs={[...before, { at: B.R_GOT, t: TXT.wow }, { at: B.R_SEND, me: true, t: TXT.thanks }]} bottom={132 + KB_H * kb2} /><Input text={f < B.R_SEND ? typed(TXT.thanks, B.R_TYPE, f) : ""} bottom={KB_H * kb2} press={f >= B.R_SEND - 3 && f < B.R_SEND + 3} /><Keyboard k={keyAt(TXT.thanks, B.R_TYPE, f)} y={KB_H * (1 - kb2)} /></Page>
     <Status t="7:12" />
-    <Tap x={450} y={830} at={B.OPEN} /><Tap x={60} y={200} at={B.BACK} /><Tap x={450} y={610} at={B.TAP_BRIZ} /><Tap x={394} y={1700} at={B.CHOOSE} />
-    <Tap x={450} y={813} at={B.CRYPTO} /><Tap x={450} y={1090} at={B.TOWALLET} /><Tap x={450} y={1749} at={B.CONT} /><Tap x={500} y={660} at={B.NET} /><Tap x={450} y={375} at={B.TRON} /><Tap x={600} y={835} at={B.PASTE} /><Tap x={450} y={1749} at={B.REVIEW} /><Tap x={450} y={1749} at={B.TOPIN} />
+    <Tap x={450} y={830} at={B.OPEN} /><Tap x={380} y={1860} at={B.T1 - 13} /><Tap x={838} y={1218} at={B.SEND1} /><Tap x={60} y={200} at={B.BACK} /><Tap x={380} y={1860} at={B.TMENU - 13} /><Tap x={838} y={1218} at={B.SENDM} /><Tap x={380} y={1860} at={B.R_TYPE - 15} /><Tap x={838} y={1218} at={B.R_SEND} /><Tap x={450} y={610} at={B.TAP_BRIZ} /><Tap x={394} y={1700} at={B.CHOOSE} />
+    <Tap x={450} y={813} at={B.CRYPTO} /><Tap x={450} y={1090} at={B.TOWALLET} /><Tap x={450} y={1749} at={B.CONT} /><Tap x={500} y={660} at={B.NET} /><Tap x={450} y={375} at={B.TRON} /><Tap x={600} y={835} at={B.PASTE - 4} /><Tap x={600} y={1020} at={B.A1 - 16} /><Tap x={450} y={1749} at={B.REVIEW} /><Tap x={450} y={1749} at={B.TOPIN} />
     {f >= B.SLEEP && <AbsoluteFill style={{ background: "#2A060C", opacity: ease(f, B.SLEEP, 6), zIndex: 99 }} />}
   </AbsoluteFill>;
 };
@@ -194,9 +194,9 @@ const GreenPhone: React.FC = () => {
   const f = useCurrentFrame();
   const kb = f < B.G_SEND + 10 ? ease(f, B.G_TYPE - 12) : 1 - ease(f, B.G_SEND + 10);
   return <AbsoluteFill style={{ background: C.bg, fontFamily: F, overflow: "hidden" }}>
-    <Lock time="1:12" c={["#0F6A35", "#168A46", "#22AB58"]} at={B.ARRIVE} icon={<Avatar who="Briz" s={120} />} from="Briz Line" title="USDT received" body="+$20.00 USDT" />
-    <Page at={B.G_OPEN}><Head who="Emeka" sub="online" /><Bubbles msgs={[{ at: 0, me: true, t: ASK }, { at: 0, me: true, t: WHERE }, { at: 0, me: true, t: ADDR, mono: true }, { at: 0, t: TXT.reply }, { at: B.G_SEND, me: true, t: TXT.wow }, { at: B.R_SEND + 5, t: TXT.thanks }]} bottom={132 + KB_H * kb} /><Input text={f < B.G_SEND ? typed(TXT.wow, B.G_TYPE, f) : ""} bottom={KB_H * kb} press={f >= B.G_SEND - 3 && f < B.G_SEND + 3} /><Keyboard k={keyAt(TXT.wow, B.G_TYPE, f)} y={KB_H * (1 - kb)} /></Page>
-    <Status t="1:12" /><Tap x={450} y={800} at={B.G_OPEN - 3} />
+    <Lock time="1:12" c={["#0F6A35", "#168A46", "#22AB58"]} at={B.ARRIVE} icon={<Avatar who="Briz" s={120} />} from="Briz" title="USDT received" body="+$20.00 USDT" />
+    <Page at={B.G_OPEN}><Head who="Emeka" sub="online" /><Bubbles msgs={[{ at: 0, me: true, t: ASK }, { at: 0, me: true, t: WHERE }, { at: 0, me: true, t: ADDR, mono: true }, { at: 0, t: TXT.reply }, { at: B.G_SEND, me: true, t: TXT.wow }, { at: B.G_GOT, t: TXT.thanks }]} bottom={132 + KB_H * kb} /><Input text={f < B.G_SEND ? typed(TXT.wow, B.G_TYPE, f) : ""} bottom={KB_H * kb} press={f >= B.G_SEND - 3 && f < B.G_SEND + 3} /><Keyboard k={keyAt(TXT.wow, B.G_TYPE, f)} y={KB_H * (1 - kb)} /></Page>
+    <Status t="1:12" /><Tap x={450} y={800} at={B.G_OPEN - 3} /><Tap x={380} y={1860} at={B.G_TYPE - 15} /><Tap x={838} y={1218} at={B.G_SEND} />
   </AbsoluteFill>;
 };
 export const BrizCryptoPhones: React.FC<{ side: "R" | "G" }> = ({ side }) => (side === "R" ? <RedPhone /> : <GreenPhone />);
