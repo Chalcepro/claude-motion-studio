@@ -23,6 +23,7 @@ import { BrizRows, BRIZ_ROWS_FRAMES } from "./compositions/BrizRows";
 import { NoirPendulum, noirPendulumDefaults, noirPendulumDuration } from "./compositions/NoirPendulum";
 import { BrizPendulum, brizPendulumDefaults, brizPendulumDuration } from "./compositions/BrizPendulum";
 import { BrizAjoIllustrated, BRIZ_AJO_ILLUSTRATED_FRAMES } from "./compositions/BrizAjoIllustrated";
+import { BrizCryptoPhones, BRIZ_CRYPTO_PHONES_FRAMES, PH_W, PH_H } from "./compositions/BrizCryptoPhones";
 import { BrizCryptoAd, BRIZ_CRYPTO_AD_FRAMES } from "./compositions/BrizCryptoAd";
 
 /**
@@ -74,5 +75,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="BrizPictureEdit" component={BrizPictureEdit} width={1080} height={1920} fps={30} durationInFrames={BRIZ_PICTURE_FRAMES} />
     <Composition id="BrizAjoIllustrated" component={BrizAjoIllustrated} width={1080} height={1920} fps={30} durationInFrames={BRIZ_AJO_ILLUSTRATED_FRAMES} />
     <Composition id="BrizCryptoAd" component={BrizCryptoAd} width={1080} height={1920} fps={30} durationInFrames={BRIZ_CRYPTO_AD_FRAMES} />
-  </>
+    <Composition id="BrizCryptoPhoneRed" component={BrizCryptoPhones} durationInFrames={BRIZ_CRYPTO_PHONES_FRAMES} fps={30} width={PH_W} height={PH_H} defaultProps={{ side: "R" as const }} />
+      <Composition id="BrizCryptoPhoneGreen" component={BrizCryptoPhones} durationInFrames={BRIZ_CRYPTO_PHONES_FRAMES} fps={30} width={PH_W} height={PH_H} defaultProps={{ side: "G" as const }} />
+    </>
 );
