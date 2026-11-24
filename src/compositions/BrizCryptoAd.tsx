@@ -1,7 +1,7 @@
 import React from "react";
 import {
   AbsoluteFill, Audio, Img, interpolate,
-  Sequence, staticFile, useCurrentFrame,
+  OffthreadVideo, Sequence, staticFile, useCurrentFrame,
 } from "remotion";
 import { clamp, eApple, eSmooth, Reveal, MaskUp } from "../lib/primitives";
 import { BRIZ } from "../lib/brands";
@@ -39,75 +39,6 @@ export const BRIZ_CRYPTO_AD_FRAMES = 390;
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 const qb = (t: number, a: number, b: number, c: number) =>
   (1 - t) ** 2 * a + 2 * (1 - t) * t * b + t ** 2 * c;
-
-// ─── SVG ROOM ELEMENTS ───────────────────────────────────────────────────────
-
-const Sofa: React.FC<{ e: Env; x?: number }> = ({ e, x = 22 }) => (
-  <g>
-    <ellipse cx={x + 252} cy={1514} rx={240} ry={22} fill="rgba(0,0,0,0.3)" />
-    {/* back */}
-    <rect x={x} y={1216} width={486} height={106} rx={18} fill={e.sf} stroke={OL} strokeWidth={3} />
-    {/* armrests */}
-    <rect x={x} y={1230} width={82} height={278} rx={14} fill={e.dk} stroke={OL} strokeWidth={3} />
-    <rect x={x + 426} y={1230} width={82} height={278} rx={14} fill={e.dk} stroke={OL} strokeWidth={3} />
-    {/* seat */}
-    <rect x={x + 50} y={1312} width={436} height={198} rx={14} fill={e.md} stroke={OL} strokeWidth={3} />
-    {/* cushion dividers */}
-    <line x1={x + 190} y1={1312} x2={x + 190} y2={1500} stroke={OL} strokeWidth={2.5} />
-    <line x1={x + 340} y1={1312} x2={x + 340} y2={1500} stroke={OL} strokeWidth={2.5} />
-    {/* highlights */}
-    {[x + 56, x + 196, x + 348].map((rx2, i) => (
-      <rect key={i} x={rx2} y={1320} width={126} height={26} rx={8} fill="rgba(255,255,255,0.09)" />
-    ))}
-  </g>
-);
-
-const Lamp: React.FC<{ e: Env; cx?: number }> = ({ e, cx = 870 }) => (
-  <g>
-    {/* pole (behind shade) */}
-    <rect x={cx - 7} y={618} width={14} height={920} rx={7} fill="#2A2A2A" stroke={OL} strokeWidth={1.5} />
-    {/* glow */}
-    <ellipse cx={cx} cy={630} rx={190} ry={150} fill={`${e.sh}22`} />
-    {/* shade */}
-    <ellipse cx={cx} cy={618} rx={96} ry={58} fill={e.sh} stroke={OL} strokeWidth={2.5} />
-    {/* underside depth */}
-    <ellipse cx={cx} cy={632} rx={72} ry={28} fill={e.sf} />
-    {/* inner warm light */}
-    <ellipse cx={cx} cy={610} rx={54} ry={22} fill={`${e.sh}80`} />
-    {/* base */}
-    <ellipse cx={cx} cy={1538} rx={52} ry={18} fill={OL} />
-  </g>
-);
-
-const ArtFrame: React.FC<{ e: Env }> = ({ e }) => (
-  <g>
-    <rect x={345} y={278} width={265} height={198} rx={10} fill={e.md} stroke={OL} strokeWidth={3.5} />
-    <rect x={363} y={296} width={229} height={162} rx={6} fill={e.sf} />
-    {/* abstract shapes in frame */}
-    <rect x={370} y={304} width={82} height={148} rx={4} fill={e.bg} />
-    <circle cx={502} cy={378} r={48} fill={e.dk} />
-    <rect x={425} y={362} width={96} height={12} rx={6} fill="rgba(255,255,255,0.1)" />
-    <rect x={425} y={382} width={120} height={12} rx={6} fill="rgba(255,255,255,0.08)" />
-  </g>
-);
-
-const Plant: React.FC<{ e: Env; green?: boolean }> = ({ e, green }) => {
-  const lf = green ? "#0A3A1E" : "#1A5C38";
-  const pt = green ? "#082F17" : "#5D1E0A";
-  return (
-    <g>
-      <path d={`M 892 1548 L 912 1430 L 982 1430 L 1002 1548 Z`} fill={pt} stroke={OL} strokeWidth={2.5} />
-      <ellipse cx={947} cy={1430} rx={35} ry={12} fill="#4A1A08" stroke={OL} strokeWidth={2} />
-      <line x1={947} y1={1430} x2={936} y2={1332} stroke={lf} strokeWidth={5.5} />
-      <line x1={947} y1={1390} x2={965} y2={1302} stroke={lf} strokeWidth={4.5} />
-      <line x1={947} y1={1365} x2={928} y2={1265} stroke={lf} strokeWidth={4} />
-      <ellipse cx={935} cy={1330} rx={46} ry={29} fill={lf} stroke={OL} strokeWidth={2.5} transform="rotate(-28 935 1330)" />
-      <ellipse cx={966} cy={1300} rx={44} ry={28} fill={lf} stroke={OL} strokeWidth={2.5} transform="rotate(18 966 1300)" />
-      <ellipse cx={925} cy={1263} rx={42} ry={26} fill={lf} stroke={OL} strokeWidth={2.5} transform="rotate(-12 925 1263)" />
-      <ellipse cx={962} cy={1240} rx={40} ry={25} fill={lf} stroke={OL} strokeWidth={2.5} transform="rotate(32 962 1240)" />
-    </g>
-  );
-};
 
 // Phone device + table, fully parameterised
 interface PhoneProps {
@@ -201,92 +132,6 @@ const PhoneOnTable: React.FC<PhoneProps> = ({ e, cx = 550, f, notifAt, sentAt, r
         );
       })}
     </g>
-  );
-};
-
-// ─── FULL ROOM (Scene 1) ──────────────────────────────────────────────────────
-const FullRoom: React.FC<{ e: Env; f: number; notifAt: number; green?: boolean }> =
-  ({ e, f, notifAt, green }) => (
-  <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ position: "absolute", inset: 0 }}>
-    <defs>
-      <radialGradient id={`wg${e === GRN ? "g" : "r"}`} cx="50%" cy="30%" r="75%">
-        <stop offset="0%" stopColor={e.sf} />
-        <stop offset="100%" stopColor={e.bg} />
-      </radialGradient>
-    </defs>
-    {/* wall */}
-    <rect width={W} height={1548} fill={`url(#wg${e === GRN ? "g" : "r"})`} />
-    {/* baseboard */}
-    <rect x={0} y={1538} width={W} height={16} fill={e.dk} />
-    {/* floor */}
-    <rect x={0} y={1548} width={W} height={H - 1548} fill={e.fl} />
-    <rect x={0} y={1548} width={W} height={38} fill="rgba(0,0,0,0.12)" />
-    {/* lamp wall glow */}
-    <ellipse cx={860} cy={550} rx={300} ry={240} fill={`${e.sh}20`} />
-    {/* room elements (back-to-front) */}
-    <ArtFrame e={e} />
-    <Lamp e={e} cx={870} />
-    <Plant e={e} green={green} />
-    <Sofa e={e} />
-    <PhoneOnTable e={e} cx={550} f={f} notifAt={notifAt} />
-  </svg>
-);
-
-// ─── HALF ROOM (Scene 4 split) — 540 px panels ───────────────────────────────
-const HalfRoom: React.FC<{
-  e: Env; side: "L" | "R"; f: number;
-  sentAt?: number; rcvAt?: number; green?: boolean;
-}> = ({ e, side, f, sentAt, rcvAt, green }) => {
-  const lamp = side === "L" ? 460 : 80; // outer edge of each half
-  const lf = green ? "#0A3A1E" : "#1A5C38";
-  const pt = green ? "#082F17" : "#5D1E0A";
-  return (
-    <svg width={540} height={H} viewBox="0 0 540 1920"
-      style={{ position: "absolute", top: 0, [side === "L" ? "left" : "right"]: 0, width: 540, height: H }}>
-      <defs>
-        <radialGradient id={`hg${side}`} cx="50%" cy="30%" r="75%">
-          <stop offset="0%" stopColor={e.sf} />
-          <stop offset="100%" stopColor={e.bg} />
-        </radialGradient>
-      </defs>
-      {/* wall */}
-      <rect width={540} height={1548} fill={`url(#hg${side})`} />
-      <rect y={1538} width={540} height={16} fill={e.dk} />
-      {/* floor */}
-      <rect y={1548} width={540} height={H - 1548} fill={e.fl} />
-      <rect y={1548} width={540} height={38} fill="rgba(0,0,0,0.12)" />
-
-      {/* lamp */}
-      <Lamp e={e} cx={lamp} />
-
-      {/* simple sofa (inner side) */}
-      {side === "L"
-        ? <Sofa e={e} x={-180} />           // sofa pokes in from left, partially clipped
-        : <g transform="scale(-1,1) translate(-540,0)"><Sofa e={e} x={-180} /></g>
-      }
-
-      {/* small plant near lamp */}
-      {side === "L" ? (
-        <g transform="scale(0.5) translate(730,0)">
-          <path d={`M 892 1548 L 912 1430 L 982 1430 L 1002 1548 Z`} fill={pt} stroke={OL} strokeWidth={4} />
-          <ellipse cx={947} cy={1430} rx={35} ry={12} fill="#4A1A08" stroke={OL} strokeWidth={4} />
-          <ellipse cx={935} cy={1330} rx={46} ry={29} fill={lf} stroke={OL} strokeWidth={5} transform="rotate(-28 935 1330)" />
-          <ellipse cx={966} cy={1300} rx={44} ry={28} fill={lf} stroke={OL} strokeWidth={5} transform="rotate(18 966 1300)" />
-          <ellipse cx={925} cy={1263} rx={42} ry={26} fill={lf} stroke={OL} strokeWidth={5} transform="rotate(-12 925 1263)" />
-        </g>
-      ) : (
-        <g transform="scale(-0.5,0.5) translate(-730,0)">
-          <path d={`M 892 1548 L 912 1430 L 982 1430 L 1002 1548 Z`} fill={pt} stroke={OL} strokeWidth={4} />
-          <ellipse cx={947} cy={1430} rx={35} ry={12} fill="#4A1A08" stroke={OL} strokeWidth={4} />
-          <ellipse cx={935} cy={1330} rx={46} ry={29} fill={lf} stroke={OL} strokeWidth={5} transform="rotate(-28 935 1330)" />
-          <ellipse cx={966} cy={1300} rx={44} ry={28} fill={lf} stroke={OL} strokeWidth={5} transform="rotate(18 966 1300)" />
-          <ellipse cx={925} cy={1263} rx={42} ry={26} fill={lf} stroke={OL} strokeWidth={5} transform="rotate(-12 925 1263)" />
-        </g>
-      )}
-
-      {/* phone + table centered in panel */}
-      <PhoneOnTable e={e} cx={270} f={f} notifAt={99999} sentAt={sentAt} rcvAt={rcvAt} />
-    </svg>
   );
 };
 
@@ -451,7 +296,7 @@ export const BrizCryptoAd: React.FC = () => {
         <Audio src={staticFile("sfx/logo-hit.wav")} endAt={40} volume={0.9} />
       </Sequence>
 
-      {/* ── SCENE 1+2: flat 2D red room, camera push → match-cut ── */}
+      {/* ── SCENE 1+2: 3D Blender room, camera push → match-cut ── */}
       {f < ZOOM_E + 5 && (
         <AbsoluteFill style={{ opacity: roomOp }}>
           <div style={{
@@ -460,9 +305,15 @@ export const BrizCryptoAd: React.FC = () => {
             transformOrigin: "50% 70%",
             filter: camBlur > 0.5 ? `blur(${camBlur}px)` : undefined,
           }}>
-            {/* room fade-in */}
-            <div style={{ opacity: interpolate(f, [0, 10], [0, 1], eApple) }}>
-              <FullRoom e={RED} f={f} notifAt={NOTIF_AT} />
+            <div style={{ opacity: interpolate(f, [0, 10], [0, 1], eApple), position: "relative" }}>
+              {/* Blender room — video if rendered, still as fallback */}
+              <OffthreadVideo src={staticFile("blender/red_room.mp4")}
+                style={{ width: W, height: H, objectFit: "cover", display: "block" }} />
+              {/* Phone SVG overlay on top of 3D room */}
+              <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}
+                style={{ position: "absolute", inset: 0 }}>
+                <PhoneOnTable e={RED} cx={550} f={f} notifAt={NOTIF_AT} />
+              </svg>
             </div>
           </div>
         </AbsoluteFill>
@@ -483,7 +334,13 @@ export const BrizCryptoAd: React.FC = () => {
             position: "absolute", left: 0, top: 0, width: 540, height: H, overflow: "hidden",
             transform: `translateX(${leftTX}px)`,
           }}>
-            <HalfRoom e={RED} side="L" f={f} sentAt={COIN_S} />
+            {/* Blender red room — center-crop the 1080-wide render into 540 panel */}
+            <Img src={staticFile("blender/red_split.png")}
+              style={{ width: 1080, height: H, marginLeft: -270, objectFit: "cover",
+                display: "block", position: "absolute", top: 0 }} />
+            <svg style={{ position: "absolute", inset: 0 }} width={540} height={H} viewBox="0 0 540 1920">
+              <PhoneOnTable e={RED} cx={270} f={f} notifAt={99999} sentAt={COIN_S} />
+            </svg>
           </div>
 
           {/* right (green, receiver) slides in from right */}
@@ -491,7 +348,13 @@ export const BrizCryptoAd: React.FC = () => {
             position: "absolute", right: 0, top: 0, width: 540, height: H, overflow: "hidden",
             transform: `translateX(${rightTX}px)`,
           }}>
-            <HalfRoom e={GRN} side="R" f={f} rcvAt={RCV_AT} green />
+            {/* Blender green room — center-crop */}
+            <Img src={staticFile("blender/grn_split.png")}
+              style={{ width: 1080, height: H, marginLeft: -270, objectFit: "cover",
+                display: "block", position: "absolute", top: 0 }} />
+            <svg style={{ position: "absolute", inset: 0 }} width={540} height={H} viewBox="0 0 540 1920">
+              <PhoneOnTable e={GRN} cx={270} f={f} notifAt={99999} rcvAt={RCV_AT} />
+            </svg>
           </div>
 
           {/* center divider */}
